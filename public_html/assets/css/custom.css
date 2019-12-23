@@ -1,0 +1,40 @@
+/* table header */
+.table thead > tr.row-primary > th {
+	background-color: #007bff !important;
+	color: white;
+}
+
+.table thead > tr.row-secondary > th {
+	background-color: #6c757d !important;
+	color: #f8f9fa;
+}
+
+.table thead > tr.row-info > th {
+	background-color: rgb(23,162,184) !important;
+	color: white;
+}
+
+.table thead > tr.row-dark > th {
+	background-color: rgb(52,58,64) !important;
+	color: white;
+}
+
+.table thead > tr.row-light > th {
+	background-color: rgb(233,236,239) !important;
+	color: #495057;
+}
+
+.table thead > tr.row-white > th {
+	background-color: #fff !important;
+	color: #495057;
+}
+
+/* cursors */
+.badge {
+	cursor: pointer;
+}
+
+/* navbar & toolbar */
+.card-no-rounded {
+	border-radius: 0 !important;
+}

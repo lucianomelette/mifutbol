@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-lg-5">
+						<div class="card mt-3">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-sort-alpha-up"></i> Categorías</b></span>
+							</div>
+							<div class="card-body">
+							    <div class="row">
+							        <div class="col">
+							            <div name="table-content"></div>
+							        </div>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<!-- Optional JavaScript -->
+		<script>
+			$(function(){
+				
+				// table-content
+				$('div[name="table-content"]').jtable({
+					title: ' ',
+					columnSelectable: false,
+					showCommandButtons: false,
+					actions: {
+						listAction: '/categories/read',
+						deleteAction: '/categories/remove',
+						updateAction: '/categories/update',
+						createAction: '/categories/create'
+					},
+					fields: {
+						id: {
+							key: true,
+							create: false,
+							edit: false,
+							list: false
+						},
+						position: {
+							title: 'Orden',
+							width: '10%',
+							inputClass: 'form-control',
+						},
+						full_name: {
+							title: 'Nombre',
+							width: '50%',
+							inputClass: 'form-control',
+						},
+						apply_ranking: {
+							title: '¿Participa en el ranking?',
+							width: '40%',
+							options: { 'NA' : 'No definido', 'YES' : 'Sí', 'NO' : 'No'},
+							listClass: 'd-none d-lg-table-cell',
+							inputClass: 'form-control',
+						},
+						is_doubles: {
+						    title: '¿Es "dobles"?',
+							width: '40%',
+							options: { '0' : 'No', '1' : 'Sí' },
+							inputClass: 'form-control',
+						},
+						menu: {
+							title: '',
+							width: '10%',
+							edit: false,
+							create: false,
+							display: function (data) {
+								return '<span class="btn btn-light btn-sm" name="btn-table-context-menu" data-record-key="' + data.record.id + '"><i class="fa fa-ellipsis-v"></i></span>';
+							},
+						},
+					}
+				});
+		 
+				//Load list from server
+				$('div[name="table-content"]').jtable('load');
+				
+				// Add Bootstrap style to jTable
+				$.stdjTableBootstrapStyle();
+				
+				// Context Menu
+				$.contextMenu({
+					selector: 'span[name="btn-table-context-menu"]',
+					trigger: 'left',
+					items: {
+						"edit": {
+							name: '<span><i class="fa fa-edit"></i> Editar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								$row = $('tr.jtable-data-row[data-record-key="' + opt.$trigger.attr('data-record-key') + '"]');
+								$('div[name="table-content"]').jtable('showEditForm', $row);
+								return true;
+							},
+						},
+						"delete": {
+							name: '<span><i class="fa fa-trash-alt"></i> Eliminar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								$row = $('tr.jtable-data-row[data-record-key="' + opt.$trigger.attr('data-record-key') + '"]');
+								$('div[name="table-content"]').jtable('showDeleteDialog', $row);
+								return true;            
+							}   
+						},
+					}
+				});
+				
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<?php $categories_enabled 	= (isset($categories) and count($categories) > 0); ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="card mt-3">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-list-ol"></i> Rankings</b></span>
+							</div>
+							<div class="card-body">
+								
+								<div class="row">
+									<div class="col-sm-12 col-lg-2">
+										<div class="form-group">
+											<label class="font-weight-bold">Categoría:</label>
+											<br>
+											<label <?= !$categories_enabled ? '' : 'class="d-none" ' ?>name="categories-label"><i class="fa fa-exclamation-triangle"></i> No hay categorías disponibles!</label>
+											<select class="form-control<?= $categories_enabled ? '' : ' d-none' ?>" name="categories-select">
+											<?php if($categories_enabled) : ?>
+											<?php foreach($categories as $category) : ?>
+												<?= '<option value="' . $category->id . '"' . ((isset($category_id) and $category->id == $category_id) ? ' selected' : ''). '>' . $category->full_name . '</option>'; ?>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div class="row<?= ($categories_enabled) ? '' : ' d-none' ?>">
+									<div class="col-12">
+										<div name="rankings-content"></div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<!-- Optional JavaScript -->
+		<script>
+		
+			$(function() {
+				
+				// attach events
+				attachEvents();
+				
+				// refresh
+				$('select[name="categories-select"]').change();
+				
+				// get current content
+				function getCurrentContent() {
+					return $('div[name="rankings-content"]');
+				}
+				
+				// attach events
+				function attachEvents() {
+								
+					// on change categories index
+					$('select[name="categories-select"]').on('change', function(e) {
+						refreshRanking();
+					});
+				}
+				
+				// refresh ranking
+				function refreshRanking() {
+
+					// get current content
+					var content = getCurrentContent();
+					
+					content.empty();
+					
+					var category_id = $('select[name="categories-select"]').val();
+
+					$.ajax({
+						method: 'POST',
+						url: '/rankings/' + category_id,
+						success: function(data, textStatus, jqXHR) {
+
+							if (data.Result == 'OK') {
+								var tournaments = data.Ranking.tournaments;
+								var ranking		= data.Ranking.ranking;
+								
+								var htmlTable =
+											'<table class="table table-responsive table-bordered table-striped table-hover small" style="border:0px" id="table-ranking">' +
+												'<thead>' +
+													'<tr>' +
+														'<td><b>#</b></td>' +
+														'<td><b>Nombre del Jugador</b></td>';
+								
+								// + add titles
+								tournaments.forEach(function(tournament) {						
+									htmlTable += '<td><b>' + tournament.description + '</b></td>';
+								});
+								htmlTable += '<td><b>Total</b></td><tr></thead><tbody>';
+								
+								// + add players
+								var i = 0;
+								ranking.forEach(function(player) {
+									i++;
+									htmlTable += 
+											'<tr>' +
+												'<td class="text-primary"><b>' + i + '</b></td>' +
+												'<td>' + player.name + '</td>';
+									
+									player.tours.forEach(function(tour) {
+										htmlTable += '<td class="text-right">' + tour.points + '</td>';
+									});
+									
+									htmlTable += '<td class="text-primary text-right"><b>' + player.points + '</b></td>';
+								});
+								htmlTable += '</tbody></table>';
+								
+								getCurrentContent().append(htmlTable);
+							}
+							else if (data.Result == 'ERROR') {
+								$.stdShowMessage({
+									icon: 'fa fa-exclamation-triangle',
+									message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+									type: 'warning'
+								});
+							}
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							console.warn(jqXHR.responseText);
+						},
+					});
+				}
+				
+			});
+		</script>
+	</body>
+</html>

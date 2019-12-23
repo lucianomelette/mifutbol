@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<?php $suppliers_enabled 		= (isset($suppliers) and count($suppliers) > 0); ?>
+		<?php $documentsTypes_enabled	= (isset($documentsTypes) and count($documentsTypes) > 0); ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-lg-12 p-0">
+						<div class="card card-no-rounded">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-search"></i> Compras <i class="fa fa-chevron-right"></i>  Consulta de Comprobantes</b></span>
+							</div>
+							<div class="card-body">
+								<div class="row">
+									<div class="col-lg-3 col-md-6">
+										<div class="form-group">
+											<label class="font-weight-bold">Proveedores:</label>
+											<br>
+											<label <?= !$suppliers_enabled ? '' : 'class="d-none" ' ?>name="suppliers-label"><i class="fa fa-exclamation-triangle"></i> No hay proveedores disponibles!</label>
+											<select class="form-control<?= $suppliers_enabled ? '' : ' d-none' ?>" name="suppliers-select" multiple="multiple">
+											<?php if ($suppliers_enabled) : ?>
+											<?php foreach($suppliers as $supplier) : ?>
+												<option value="<?= $supplier->id ?>">
+													<?= $supplier->unique_code . ' | ' . $supplier->business_name ?>
+												</option>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+									
+									<div class="col-lg-3 col-md-6">
+										<div class="form-group">
+											<label class="font-weight-bold">Comprobantes:</label>
+											<br>
+											<label <?= !$documentsTypes_enabled ? '' : 'class="d-none" ' ?>name="docs-types-label"><i class="fa fa-exclamation-triangle"></i> No hay documentos disponibles!</label>
+											<select class="form-control<?= $documentsTypes_enabled ? '' : ' d-none' ?>" name="docs-types-select" multiple="multiple">
+											<?php if ($documentsTypes_enabled) : ?>
+											<?php foreach($documentsTypes as $documentType) : ?>
+												<option
+													value="<?= $documentType->unique_code ?>">
+													<?= trim($documentType->description) ?>
+												</option>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div class="row">
+							        <div class="col">
+										<div class="btn btn-outline-primary" name="btn-search"><i class="fa fa-search"></i> Buscar</div>
+									<div>
+								</div>
+							
+							    <div class="row">
+							        <div class="col">
+							            <div name="table-content"></div>
+							        </div>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<!-- Optional JavaScript -->
+		<script>
+			$(function(){
+				
+				if ( !$('select[name="suppliers-select"]').hasClass('d-none') )
+					$('select[name="suppliers-select"]').select2({ width: '100%' });
+				
+				if ( !$('select[name="docs-types-select"]').hasClass('d-none') )
+					$('select[name="docs-types-select"]').select2({ width: '100%' });
+				
+				// table-content
+				$('div[name="table-content"]').jtable({
+					title: ' ',
+					columnSelectable: false,
+					showCommandButtons: false,
+					paging: true,
+					pageList: 'normal',
+					pageSize: 10,
+					actions: {
+						listAction: '/purchases/read',
+						deleteAction: '/purchases/remove',
+					},
+					fields: {
+						id: {
+							key: true,
+							create: false,
+							edit: false,
+							list: false
+						},
+						menu: {
+							title: '',
+							width: '5%',
+							edit: false,
+							create: false,
+							display: function (data) {
+								return '<span class="btn btn-light btn-sm" name="btn-table-context-menu" data-record-key="' + data.record.id + '"><i class="fa fa-ellipsis-v"></i></span>';
+							},
+						},
+						dated_at: {
+							title: 'Fecha',
+							width: '10%',
+						},
+						document_type_code: {
+							title: 'Código',
+							width: '10%',
+						},
+						number: {
+							title: 'Número',
+							width: '20%',
+							listClass: 'd-none d-lg-table-cell',
+						},
+						supplier_id: {
+							title: 'Proveedor',
+							width: '30%',
+							options: '/suppliers/options',
+						},
+						total: {
+							title: 'Total',
+							width: '20%',
+						},
+					}
+				});
+		 
+				//Load list from server
+				$('div[name="table-content"]').jtable('load');
+				
+				// click on search
+				$('div[name="btn-search"]').on('click', function(e) {
+					e.preventDefault();
+
+					$('div[name="table-content"]').jtable('load', { 
+						suppliers_ids : $('select[name="suppliers-select"]').val(),
+						docs_types_codes : $('select[name="docs-types-select"]').val(),
+					});
+				});
+				
+				// Add Bootstrap style to jTable
+				$.stdjTableBootstrapStyle();
+				
+				// Context Menu
+				$.contextMenu({
+					selector: 'span[name="btn-table-context-menu"]',
+					trigger: 'left',
+					items: {
+						"edit": {
+							name: '<span><i class="fa fa-edit"></i> Editar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								window.location.href = '/purchases/' + opt.$trigger.attr('data-record-key');
+								return false;
+							},
+						},
+						"delete": {
+							name: '<span><i class="fa fa-trash-alt"></i> Eliminar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								$row = $('tr.jtable-data-row[data-record-key="' + opt.$trigger.attr('data-record-key') + '"]');
+								$('div[name="table-content"]').jtable('showDeleteDialog', $row);
+								return true;            
+							}   
+						},
+					}
+				});
+				
+			});
+		</script>
+	</body>
+</html>

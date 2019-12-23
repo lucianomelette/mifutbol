@@ -1,0 +1,1602 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+		
+		<link rel="stylesheet" href="/assets/css/treant/treant.css">
+		<link rel="stylesheet" href="/assets/css/treant/tree.css">
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<?php $tournaments_enabled 	= (isset($tournaments) and count($tournaments) > 0); ?>
+		<?php $categories_enabled 	= (isset($categories) and count($categories) > 0); ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="card mt-3">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-sitemap"></i> Partidos</b></span>
+							</div>
+							<div class="card-body">
+								
+								<div class="row">
+									<div class="col-sm-7 col-lg-3">
+										<div class="form-group">
+											<label class="font-weight-bold">Torneo:</label>
+											<br>
+											<label <?= !$tournaments_enabled ? '' : 'class="d-none" ' ?>name="tournaments-label"><i class="fa fa-exclamation-triangle"></i> No hay torneos disponibles!</label>
+											<select class="form-control<?= $tournaments_enabled ? '' : ' d-none' ?>" name="tournaments-select">
+											<?php if($tournaments_enabled) : ?>
+											<?php foreach($tournaments as $tournament) : ?>
+												<?= '<option value="' . $tournament->id . '"' . ((isset($tournament_id) and $tournament->id == $tournament_id) ? ' selected' : ''). '>' . $tournament->description . '</option>'; ?>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+									
+									<div class="col-sm-5 col-lg-2">
+										<div class="form-group">
+											<label class="font-weight-bold">Categoría:</label>
+											<br>
+											<label <?= !$categories_enabled ? '' : 'class="d-none" ' ?>name="categories-label"><i class="fa fa-exclamation-triangle"></i> No hay categorías disponibles!</label>
+											<select class="form-control<?= $categories_enabled ? '' : ' d-none' ?>" name="categories-select">
+											<?php if($categories_enabled) : ?>
+											<?php foreach($categories as $category) : ?>
+												<?= '<option value="' . $category->id . '"' . ((isset($category_id) and $category->id == $category_id) ? ' selected' : ''). '>' . $category->full_name . '</option>'; ?>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div class="row<?= ($tournaments_enabled and $categories_enabled) ? '' : ' d-none' ?>" name="tabs-content">
+									<div class="col">
+										<nav>
+											<div class="nav nav-tabs" role="tablist">
+												<a class="nav-item nav-link active" id="groups-tab" data-toggle="tab" href="#groups" role="tab" aria-controls="groups" aria-selected="true">
+													<b>Grupos</b>
+												</a>
+												<a class="nav-item nav-link" id="eighths-tab" data-toggle="tab" href="#eighths" role="tab" aria-controls="eighths" aria-selected="false">
+													<b>8vos</b>
+												</a>
+												<a class="nav-item nav-link" id="quarters-tab" data-toggle="tab" href="#quarters" role="tab" aria-controls="quarters" aria-selected="false">
+													<b>4tos</b>
+												</a>
+												<a class="nav-item nav-link" id="semifinals-tab" data-toggle="tab" href="#semifinals" role="tab" aria-controls="semifinals" aria-selected="false">
+													<b>Semifinales</b>
+												</a>
+												<a class="nav-item nav-link" id="final-tab" data-toggle="tab" href="#final" role="tab" aria-controls="final" aria-selected="false">
+													<b>Final</b>
+												</a>
+											</div>
+										</nav>
+										<div class="tab-content">
+											<!-- groups -->
+											<div class="tab-pane fade show active" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+												<span class="badge badge-dark p-2 mt-3" name="btn-add-group"><i class="fa fa-plus"></i> Agregar Grupo</span>
+												<div class="row" name="groups-matches-content" data-round="0" data-refresh="false"></div>
+											</div>
+											<!-- 8vos -->
+											<div class="tab-pane fade" id="eighths" role="tabpanel" aria-labelledby="eighths-tab">
+												<div class="row mt-3" name="eighths-matches-content" data-round="8" data-refresh="false"></div>
+											</div>
+											<!-- 4tos -->
+											<div class="tab-pane fade" id="quarters" role="tabpanel" aria-labelledby="quarters-tab">
+												<div class="row mt-3" name="quarters-matches-content" data-round="4" data-refresh="false"></div>
+											</div>
+											<!-- semifinals -->
+											<div class="tab-pane fade" id="semifinals" role="tabpanel" aria-labelledby="semifinals-tab">
+												<div class="row mt-3" name="semifinals-matches-content" data-round="2" data-refresh="false"></div>
+											</div>
+											<!-- final -->
+											<div class="tab-pane fade" id="final" role="tabpanel" aria-labelledby="final-tab">
+												<div class="row mt-3" name="final-matches-content" data-round="1" data-refresh="false"></div>
+											</div>
+										</div>
+										
+										<!-- tree content -->
+										<div class="mt-2" name="tree-wrapper"></div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<script src="/assets/js/plugins/treant/raphael.js"></script>
+		<script src="/assets/js/plugins/treant/treant.js"></script>
+		
+		<!-- Optional JavaScript -->
+		<script>
+		
+			$(function() {
+				
+				// block UI on every ajax
+				$(document).ajaxStart($.blockUI({ message : null })).ajaxStop($.unblockUI);
+				
+				// device viewport
+				configDeviceViewport();
+					
+				// create add group dialog
+				createAddGroupDialog();
+					
+				// create "add or edit" match dialog
+				createAddOrEditMatchDialog();
+				
+				// create delete match dialog
+				createDeleteMatchDialog();
+				
+				// create match photo dialog
+				createMatchPhotoDialog();
+				
+				// attach events
+				attachEvents();
+				
+				// refresh
+				if ( $('select[name="categories-select"]').hasClass('d-none') ) {
+					$('select[name="tournaments-select"]').change(); }
+				else {
+					$('select[name="categories-select"]').change(); }
+				
+				// device viewport
+				function configDeviceViewport() {
+					$("body").append('<div class="device-xs d-block d-sm-none"></div>');
+					$("body").append('<div class="device-sm d-none d-sm-block d-md-none"></div>');
+					$("body").append('<div class="device-md d-none d-md-block d-lg-none"></div>');
+					$("body").append('<div class="device-lg d-none d-lg-block d-xl-none"></div>');
+					$("body").append('<div class="device-xl d-none d-xl-block"></div>');
+				}
+				
+				// get current content
+				function getCurrentContent() {
+					return $('div.tab-pane.active.show > div.row[name$="matches-content"]');
+				}
+				
+				// get current matches
+				function getCurrentMatches() {
+					var content = getCurrentContent();
+					return content.find('div[name^="match-"]').length;
+				}
+				
+				// create add group dialog
+				function createAddGroupDialog() {
+					
+					// groups options
+					var chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+					var htmlGroupsOptions = '';
+					chars.forEach(function(c) {
+						if ( $('div[name="group-' + c + '"]').length == 0) {
+							htmlGroupsOptions += '<option value="' + c + '">' + c + '</option>';
+						}
+					});
+					
+					var htmlDialog = 
+						'<div class="d-none" name="add-group-dialog" title="Agregar grupo">' +
+							'<div class="row">' +
+								'<div class="col-12">' +
+									'<label><b>Seleccione un grupo</b></label>' +
+									'<select class="form-control" name="groups-select">' +
+										htmlGroupsOptions +
+									'</select>' +
+								'</div>' +
+							'</div>' +
+						'</div>';
+
+					$("body").append(htmlDialog);
+					
+					$('div[name="add-group-dialog"]').dialog({
+						resizable: false,
+						height: "auto",
+						modal: true,
+						autoOpen: false,
+						buttons: {
+							Cancelar: function() {
+								$(this).dialog("close");
+							},
+							"Agregar grupo": function() {
+								
+								var groupChar = $('select[name="groups-select"]').val();
+								
+								if ( $('div[name="group-' + groupChar + '"]').length == 0) {
+									var content = getCurrentContent();
+									
+									addGroup(content, { groupChar : groupChar });
+									
+									$(this).dialog("close");
+								}
+								else {
+									$.stdShowMessage({
+										icon: 'fa fa-exclamation-triangle',
+										message: 'Ya existe un grupo con la misma letra',
+										type: 'warning'
+									});
+								}
+							},
+						},
+						create: function() {
+							$(this).removeClass("d-none");
+						},
+					});
+				}
+				
+				// create "add or edit" match dialog
+				function createAddOrEditMatchDialog() {
+					
+					// html players options
+					var htmlPlayersOptions = '<option value="0"></option>';
+					
+					// html points options
+					var htmlPointsOptions = '<option value="-">-</option>';
+					for (var i = 0; i < 31; i++) {
+						htmlPointsOptions += '<option value="' + i + '">' + i + '</option>';
+					}
+					
+					// html players selects
+					var selects = {
+						types: [
+							{name: "winner",	placeholder: "Ganador"},
+							{name: "loser", 	placeholder: "Perdedor"}
+						],
+						values: [
+							{name: "player", 	css: "form-control", 			hasPlaceholder: true, 	options: htmlPlayersOptions, 	nodes: [""]},
+							{name: "set", 		css: "form-control pl-2 pr-2", 	hasPlaceholder: false, 	options: htmlPointsOptions, 	nodes: ["1", "2", "3"]}
+						]
+					};
+					
+					var htmlSelects = '';
+					selects.types.forEach(function(type) {
+						htmlSelects += '<tr>';
+						selects.values.forEach(function(value) 
+						{
+							value.nodes.forEach(function(node)
+							{
+								htmlSelects += 
+									'<td>' +
+										'<select ' +
+											'class="' + value.css + '"' +
+											'name="' + type.name + '-' + value.name + node + '-select' + '"' +
+											(value.hasPlaceholder ? 'data-placeholder="' + type.placeholder + '">' : '>') +
+											value.options +
+										'</select>' +
+									'</td>';
+							});
+						});
+						htmlSelects += '</tr>';
+					});
+					
+					// html result type options
+					var checks = [
+						{value: "SB", name: "Pendiente"},
+						{value: "OK", name: "Finalizado"},
+						{value: "AB", name: "Abandono"},
+						{value: "WO", name: "W.O."},
+						{value: "DP", name: "Pase directo"},
+					];
+					
+					var htmlChecks = '<select class="form-control" name="result-type-select">';
+					checks.forEach(function(check) {
+						htmlChecks +=
+							'<option value="' + check.value + '">' + check.name + '</option>';
+					});
+					htmlChecks += '</select>';
+					
+					// html match order options
+					var htmlOrderOptions = '<select class="form-control" name="order-select"></select>';
+					
+					var htmlDialog = 
+						'<div class="d-none" name="add-or-edit-match-dialog">' +
+							'<div class="content">' +
+								'<div class="row">' +
+									'<div class="col-12">' +
+										'<table>' +
+											'<thead>' +
+												'<tr>' +
+													'<th width="50%">Jugadores</th>' +
+													'<th>1er</th>' +
+													'<th>2do</th>' +
+													'<th>3er</th>' +
+												'</tr>' +
+											'</thead>' +
+											'<tbody name="result-table-body">' +
+												htmlSelects +
+											'</tbody>' +
+										'</table>' +
+									'</div>' +
+								'</div>' +
+								'<hr>' +
+								'<div class="row">' +
+									'<div class="col-lg-8 col-sm-12">' +
+										'<div class="form-group">' +
+											'<label><b>Resultado</b></label>' +
+											htmlChecks +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+								'<div class="row">' +
+									'<div class="col-lg-8 col-sm-12">' +
+										'<div class="form-group">' +
+											'<label><b>Fecha</b></label><br>' +
+											'<input type="checkbox" class="form-check-inline" name="check-to-define"> Por definir' +
+											'<input type="datetime-local" class="form-control" name="match-datetime" />' +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+								'<div class="row">' +
+									'<div class="col-lg-8 col-sm-12">' +
+										'<div class="form-group">' +
+											'<label><b>Orden</b></label><br>' +
+											htmlOrderOptions +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</div>';
+					
+					// append html dialog
+					$("body").append(htmlDialog);
+					
+					// create jquery dialog window
+					$('div[name="add-or-edit-match-dialog"]').dialog({
+						resizable: false,
+						height: "auto",
+						modal: true,
+						autoOpen: false,
+						buttons: {
+							Cancelar: function() {
+								$(this).dialog("close");
+							},
+							Guardar: function()
+							{
+								var validRecord = true;
+								var errorMessage = '';
+								
+								// get dialog data
+								var winnerPlayerId 	= $('select[name="winner-player-select"]').val() || 0;
+								var loserPlayerId	= $('select[name="loser-player-select"]').val() || 0;
+								
+								var winnerPlayerName 	= $('select[name="winner-player-select"] :selected').text().trim();
+								var loserPlayerName 	= $('select[name="loser-player-select"] :selected').text().trim();
+								
+								// match result
+								var winnerResult = [], loserResult = [], matchResult = '';
+								for (var i = 1; i < 4; i++) {
+									var win = $('select[name="winner-set' + i + '-select"]').val();
+									var los = $('select[name="loser-set' + i + '-select"]').val();
+									
+									winnerResult.push(win);
+									loserResult.push(los);
+									
+									matchResult += win + '|' + los + ';';
+								}
+								
+								// result type: SB, OK, AB, WO or DP
+								var resultType = {
+									value : $('select[name="result-type-select"]').val(),
+									name : $('select[name="result-type-select"] :selected').text(),
+								};
+								
+								// match datetime
+								var matchDateTime;
+								if ( $('input[name="check-to-define"]').prop("checked") ) {
+									matchDateTime = {
+										status : "todefine",
+										dialogValue : "",
+										postValue : "1990-01-01 00:00:00",
+										displayValue : "Fecha por definir",
+									};
+								}
+								else {
+									matchDateTime = {
+										status : "defined",
+										dialogValue : $('input[name="match-datetime"]').val(),
+										postValue : $('input[name="match-datetime"]').val().replace("T", " "),
+										displayValue : $.stdGetCustomDateTime(new Date($('input[name="match-datetime"]').val())),
+									};
+								}
+								
+								// match order
+								var matchOrder = $('select[name="order-select"]').val();
+								
+								// valid winner players
+								if (winnerPlayerId == 0) {
+									validRecord = false;
+									errorMessage += '<br>Debe seleccionar un ganador.';
+								}
+								
+								// valid loser players
+								if (loserPlayerId == 0 && resultType.value != 'DP') {
+									validRecord = false;
+									errorMessage += '<br>Debe seleccionar un perdedor.';
+								}
+								
+								// different players
+								if (winnerPlayerId == loserPlayerId) {
+									validRecord = false;
+									errorMessage += '<br>El ganador y el perdedor deben ser diferentes.';
+								}
+								
+								// W.O.
+								if (resultType.value == 'WO') {
+									winnerResult = ['6', '6', '-'];
+									loserResult = ['0', '0', '-'];
+									
+									matchResult = "6|0;6|0;-|-";
+								}
+								// Direct Pass
+								else if (resultType.value == 'DP') {
+									winnerResult = ['-', '-', '-'];
+									loserResult = ['-', '-', '-'];
+									
+									matchResult = "-|-;-|-;-|-";
+									
+									loserPlayerId 	= null;
+									loserPlayerName = "Pase directo";
+								}
+							
+								if (validRecord) {
+									
+									// post data
+									var postData = {
+										match_order : matchOrder,
+										winner_enrolled_id : winnerPlayerId,
+										loser_enrolled_id : loserPlayerId,
+										round : getCurrentContent().attr("data-round"),
+										match_result : matchResult,
+										result_type : resultType.value,
+										match_datetime : matchDateTime.postValue,
+									};
+
+									// dialog data
+									var dialogData = {
+										id : 0, // put it on callback function
+										matchOrder : matchOrder,
+										winnerPlayerId : winnerPlayerId,
+										winnerPlayerName : winnerPlayerName,
+										winnerResult : winnerResult,
+										loserPlayerId : loserPlayerId,
+										loserPlayerName : loserPlayerName,
+										loserResult : loserResult,
+										resultType : resultType,
+										matchDateTime : matchDateTime,
+									};
+									
+									var dialog = $(this);
+									
+									// execute callback function
+									// it depends on "add or edit"
+									dialog.dialog("option", "onSave")(postData, dialogData, function(matchId) {
+										// sort matches
+										sortMatches(matchId);
+										
+										// update tree on "add or edit" match
+										updateTree();
+										
+										dialog.dialog("close");
+										
+										// send notification to the players
+										if (resultType.value == "SB")
+										{
+											if ( (r = confirm("¿Enviar notificación a los jugadores?")) == true )
+											{
+												var phonesToNotify = [];
+												
+												// winner phone #1
+												if ( (phone = $('select[name="winner-player-select"] :selected').attr("data-phone1")) != "?" )
+													phonesToNotify.push(phone);
+												
+												// winner phone #2
+												if ( (phone = $('select[name="winner-player-select"] :selected').attr("data-phone2")) != "?" )
+													phonesToNotify.push(phone);
+												
+												// loser phone #1
+												if ( (phone = $('select[name="loser-player-select"] :selected').attr("data-phone1")) != "?" )
+													phonesToNotify.push(phone);
+												
+												// loser phone #2
+												if ( (phone = $('select[name="loser-player-select"] :selected').attr("data-phone2")) != "?" )
+													phonesToNotify.push(phone);
+												
+												phonesToNotify.forEach(function(phone) {
+													window.open("https://wa.me/" + phone + "?text=Confirmado%20" + matchDateTime.displayValue);
+												});
+											}
+										}
+										
+									});
+								}
+								else {
+									$.stdShowMessage({
+										icon: 'fa fa-exclamation-triangle',
+										message: 'Error al grabar:' +
+													'<b>' + errorMessage + '</b>',
+										type: 'warning'
+									});
+								}
+							},
+						},
+						create: function() {
+							$(this).removeClass("d-none");
+						},
+					});
+				}
+				
+				// create "delete" match dialog
+				function createDeleteMatchDialog() {
+					var htmlDialog = 
+						'<div class="d-none" name="delete-match-dialog" title="Eliminar partido">' +
+							'<div class="row">' +
+								'<div class="col-12">' +
+									'<p><i class="fa fa-exclamation-triangle"></i> ¿Desea eliminar el partido?</p>' +
+								'</div>' +
+							'</div>' +
+						'</div>';
+
+					// append html dialog
+					$('body').append(htmlDialog);
+					
+					// create dialog
+					$('div[name="delete-match-dialog"]').dialog({
+						resizable: false,
+						height: "auto",
+						autoOpen: false,
+						modal: true,
+						buttons: {
+							Cancelar: function() {
+								$(this).dialog("close");
+							},
+							"Eliminar partido": function() {
+																
+								var matchDialog = $(this);
+								var matchId = matchDialog.dialog("option", "matchId");
+								var postData = { id : matchId };
+								
+								// delete match
+								$.ajax({
+									method: 'POST',
+									url: '/matches/remove',
+									dataType: 'json',
+									data: postData,
+									success: function(data, textStatus, jqXHR) {
+										if (data.Result == 'OK') {
+											
+											// delete match from screen
+											getMatchElement(matchId).remove();
+											
+											// refresh tree on delete match
+											updateTree();
+											
+											matchDialog.dialog("close");
+										}
+										else if (data.Result == 'ERROR') {
+											$.stdShowMessage({
+												icon: 'fa fa-exclamation-triangle',
+												message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+												type: 'warning'
+											});
+										}
+									},
+									error: function(jqXHR, textStatus, errorThrown) {
+										console.warn(jqXHR.responseText);
+									},
+								});
+							},
+						},
+						create: function() {
+							$(this).removeClass("d-none");
+						}
+					});
+				}
+				
+				// create match photo dialog
+				function createMatchPhotoDialog() {
+					
+					var htmlDialog = 
+						'<div class="d-none" name="match-photo-dialog" title="Foto del partido">' +
+							'<div class="row">' +
+								'<div class="col-12">' +
+									'<div class="form-group">' +
+										'<input class="form-control-file" type="file" name="match-photo-input" accept="image/*;capture=camera">' +
+									'</div>' +
+									'<div class="form-group">' +
+										'<img class="img-fluid rounded mx-auto d-block" name="match-photo-image">' +
+									'</div>' +
+								'</div>' +
+							'</div>' +
+						'</div>';
+
+					$("body").append(htmlDialog);
+					
+					$('div[name="match-photo-dialog"]').dialog({
+						resizable: false,
+						height: "auto",
+						modal: true,
+						autoOpen: false,
+						buttons: {
+							Cancelar: function() {
+								$(this).dialog("close");
+							},
+							"Guardar cambios": function() {
+								var matchId = $(this).dialog("option", "matchId");
+								
+								var input = $('input[name="match-photo-input"]')[0];
+								if (input.files && input.files[0])
+								{
+									var formData = new FormData();                  
+									formData.append('photo', input.files[0]);
+								
+									$.ajax({
+										method: 'POST',
+										url: '/matches/photos/upload/' + matchId, // point to server-side PHP script 
+										dataType: 'text',  // what to expect back from the PHP script, if anything
+										cache: false,
+										contentType: false,
+										processData: false,
+										data: formData,
+										beforeSend : function() {
+										   $.blockUI({ message: null });
+										}, 
+										success: function(data, textStatus, jqXHR) {
+											if (data == 'OK') {
+												$.stdShowMessage({
+													icon: 'fa fa-check',
+													message: '¡Proceso finalizado!',
+													type: 'success'
+												});
+											}
+											else if (data == 'ERROR') {
+												$.stdShowMessage({
+													icon: 'fa fa-exclamation-triangle',
+													message: 'No pudimos subir la foto. Por favor, vuelva a intenterlo.',
+													type: 'warning'
+												});
+											}
+											$.unblockUI();
+										},
+										error: function(jqXHR, textStatus, errorThrown) {
+											$.unblockUI();
+											console.warn(jqXHR.responseText);
+										},
+									 });
+								}
+							},
+						},
+						create: function() {
+							$(this).removeClass("d-none");
+						},
+					});
+				}
+				
+				// attach events
+				function attachEvents() {
+					
+					// on change tournaments index
+					$('select[name="tournaments-select"]').on('change', function(e) {
+						// reset data-refresh to false
+						$('div.tab-content > div.tab-pane > div.row[name$="-matches-content"]').attr("data-refresh", "false");
+
+						refreshCategories();
+					});
+					
+					// on change categories index
+					$('select[name="categories-select"]').on('change', function(e) {
+						// reset data-refresh to false
+						$('div.tab-content > div.tab-pane > div.row[name$="-matches-content"]').attr("data-refresh", "false");
+						
+						// refresh players enrolled from server
+						refreshPlayersEnrolled();
+						
+						// refresh groups
+						refreshGroups();
+						
+						// refresh tree on category change
+						updateTree();
+					});
+					
+					// on tab changes
+					$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+						refreshGroups();
+					});
+					
+					// on click add group button
+					$('span[name="btn-add-group"]').on('click', function(e) {
+						showAddGroupDialog();
+					});
+					
+					// on click add match button
+					$(document).on('click', 'span[name="btn-add-match"]', function(e) {
+						var availableMatches = getCurrentContent().attr("data-round");
+						
+						if (availableMatches == 0 || availableMatches > getCurrentMatches()) {
+							var groupChar = $(this).attr('data-value');
+							showAddMatchDialog(groupChar);
+						}
+						else {
+							$.stdShowMessage({
+								icon: 'fa fa-exclamation-triangle',
+								message: 'No se pueden agregar más partidos en este grupo.',
+								type: 'warning'
+							});
+						}
+					});
+					
+					// on click edit match button
+					$(document).on('click', 'span[name="btn-edit-match"]', function(e) {
+						var matchId = $(this).attr('data-value');					
+						showEditMatchDialog(matchId);
+					});
+					
+					// on click delete match button
+					$(document).on('click', 'span[name="btn-delete-match"]', function(e) {
+						var matchId = $(this).attr('data-value');					
+						showDeleteMatchDialog(matchId);
+					});
+					
+					// on click match photo button
+					$(document).on('click', 'span[name="btn-match-photo"]', function(e) {
+						var matchId = $(this).attr('data-value');					
+						showMatchPhotoDialog(matchId);
+					});
+					
+					// on change match photo input
+					$(document).on('change', 'input[name="match-photo-input"]', function(e) {
+						var input = $(this)[0];
+						if (input.files && input.files[0]) {
+							var reader = new FileReader();
+							reader.onload = function(e) {
+								$('img[name="match-photo-image"]').attr('src', e.target.result);
+							}
+							reader.readAsDataURL(input.files[0]);
+						}
+					});
+					
+					// on change W.O. list
+					$(document).on('change', 'select[name="result-type-select"]', function(e) {
+						var resultType 	= $('select[name="result-type-select"] :selected').val();
+						var htmlSets 	= $('tbody[name="result-table-body"] select[name*="set"]');
+						
+						if (resultType == 'WO') {
+							htmlSets.attr('disabled', true);
+							$('select[name="loser-player-select"]')
+							    .prop('disabled', false)
+							    .trigger("chosen:updated");
+						}
+						else if (resultType == 'DP') {
+							htmlSets.attr('disabled', true);
+							$('select[name="loser-player-select"]')
+							    .prop('disabled', true)
+							    .trigger("chosen:updated");
+						}
+						else {
+							htmlSets.attr('disabled', false);
+							$('select[name="loser-player-select"]')
+							    .prop('disabled', false)
+							    .trigger("chosen:updated");
+						}
+					});
+					
+					// on change "to define datetime" check
+					$(document).on('change', 'input[name="check-to-define"]', function(e) {
+						var toDefineChecked = $('input[name="check-to-define"]').prop('checked');
+						$('input[name="match-datetime"]').attr('disabled', toDefineChecked);
+					});
+					
+					// on window resize
+					$(window).resize(function(){
+						
+						// define dialog width
+						var dialogWidth = "30%";
+						if (isBreakpoint('sm') || isBreakpoint('xs')) {
+							dialogWidth = "95%";
+						}
+						
+						$('div[name="add-or-edit-match-dialog"]')
+							.dialog({ width : dialogWidth });
+					});
+				}
+				
+				// refresh categories
+				function refreshCategories() {
+					var tournament_id = $('select[name="tournaments-select"]').val();
+
+					$.ajax({
+						method: 'POST',
+						url: '/tournaments_categories/options/' + tournament_id,
+						beforeSend: function() {
+							$.blockUI({ message : null });
+						},
+						success: function(data, textStatus, jqXHR)
+						{
+							if (data.Result == 'OK')
+							{
+								var categoriesSelect 	= $('select[name="categories-select"]');
+								var categoriesLabel 	= $('label[name="categories-label"]');
+								var tabsContent 		= $('div[name="tabs-content"]');
+								
+								if (data.Options.length > 0) {						
+									categoriesSelect.removeClass('d-none');
+									categoriesLabel.addClass('d-none');
+									tabsContent.removeClass('d-none');
+									
+									var htmlOption = '';
+									categoriesSelect.empty();
+									data.Options.forEach(function(element) {
+										htmlOption = '<option value="' + element.id + '">' + element.full_name + '</option>';
+										categoriesSelect.append(htmlOption)
+									});
+								}
+								else {
+									categoriesSelect.addClass('d-none');
+									categoriesLabel.removeClass('d-none');
+									tabsContent.addClass('d-none');
+								}
+							}
+							else if (data.Result == 'ERROR') {
+								categoriesSelect.addClass('d-none');
+								categoriesLabel.removeClass('d-none');
+								tabsContent.addClass('d-none');
+								
+								$.stdShowMessage({
+									icon: 'fa fa-exclamation-triangle',
+									message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+									type: 'warning'
+								});
+							}
+							
+							// refresh players enrolled from server
+							refreshPlayersEnrolled();
+							
+							// refresh data from server
+							refreshGroups();
+							
+							// refresh tree on init
+							updateTree();
+							
+							// unblock UI
+							$.unblockUI;
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							$.unblockUI;
+							console.warn(jqXHR.responseText);
+						},	
+					});
+				}
+				
+				// refresh players enrolled
+				function refreshPlayersEnrolled() {
+					var tournament_id 	= $('select[name="tournaments-select"]').val();
+					var category_id 	= $('select[name="categories-select"]').val();
+					
+					// get players from server
+					$.ajax({
+						method: 'POST',
+						url: '/enrollments/options/' + tournament_id + '/' + category_id,
+						beforeSend: function() {
+							$.blockUI({
+								message : null,
+								fadeIn : 0, // to not show screen flickering
+							});
+						},
+						success: function(data, textStatus, jqXHR)
+						{
+							if (data.Result == 'OK')
+							{
+								// html players options
+								var htmlPlayersOptions = '<option value="0"></option>';
+								data.Options.forEach(function(elem) {
+									htmlPlayersOptions += '<option value="' + elem.Value + '" data-phone1="' + elem.Phone1 + '" data-phone2="' + elem.Phone2 + '">' + elem.DisplayText + '</option>';
+								});
+								
+								$('select[name$="-player-select"]')
+									.empty()
+									.append(htmlPlayersOptions);
+							}
+							else if (data.Result == 'ERROR') {
+								$.stdShowMessage({
+									icon: 'fa fa-exclamation-triangle',
+									message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+									type: 'warning'
+								});
+							}
+							
+							$.unblockUI;
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							$.unblockUI;
+							console.warn(jqXHR.responseText);
+						},
+					});
+				}
+				
+				// refresh groups
+				function refreshGroups() {
+
+					// get current content
+					var content = getCurrentContent();
+					
+					// only refresh once every tab
+					if (content.attr("data-refresh") == "false") {
+						content.empty();
+						
+						var tournament_id 	= $('select[name="tournaments-select"]').val();
+						var category_id 	= $('select[name="categories-select"]').val();
+						
+						var round = content.attr("data-round") || 0;
+						
+						$.ajax({
+							method: 'POST',
+							url: '/matches/read/' + tournament_id + '/' + category_id,
+							dataType: 'json',
+							data: { round : round },
+							beforeSend: function() {
+								$.blockUI({
+									message : null,
+									fadeIn : 0, // to not show screen flickering
+								});
+							},
+							success: function(data, textStatus, jqXHR)
+							{
+								if (data.Result == 'OK')
+								{
+									if (data.Records.length > 0)
+									{						
+										var i = 0;
+										var groupCharAnt = '';
+										while (i < data.Records.length) {
+											groupCharAnt = data.Records[i].group_char;
+											
+											// + add group once
+											addGroup(content, { groupChar : groupCharAnt });
+											
+											while (i < data.Records.length && groupCharAnt == data.Records[i].group_char) {
+												
+												var matchResult = (data.Records[i].match_result == null ? "" : data.Records[i].match_result.trim().split(";"));
+												var winnerResult = [];
+												var loserResult = [];
+												for (var j = 0; j < matchResult.length; j++) {
+													var setResult = matchResult[j].trim().split("|");
+													winnerResult.push(setResult[0]);
+													loserResult.push(setResult[1]);
+												}
+												for (var k = j; k < 3; k++) { // < 5 if 5 sets
+													winnerResult.push("-");
+													loserResult.push("-");
+												}
+												
+												// result type
+												var resultType = {value : data.Records[i].result_type};
+												switch (data.Records[i].result_type) {
+													case 'SB': resultType['name'] = 'Pendiente'; break;
+													case 'OK': resultType['name'] = 'Finalizado'; break;
+													case 'AB': resultType['name'] = 'Abandono'; break;
+													case 'WO': resultType['name'] = 'W.O.'; break;
+													case 'DP': resultType['name'] = 'Pase directo'; break;
+												}
+
+												// match datetime
+												var matchDateTime;
+												if (data.Records[i].match_datetime == null || data.Records[i].match_datetime == "1990-01-01 00:00:00") {
+													matchDateTime = {
+														status : "todefine",
+														dialogValue : "",
+														displayValue : "Fecha por definir",
+													};
+												}
+												else {
+													matchDateTime = {
+														status : "defined",
+														dialogValue : data.Records[i].match_datetime.replace(" ", "T"),
+														displayValue : $.stdGetCustomDateTime(new Date(data.Records[i].match_datetime))
+													};
+												}
+												
+												addMatch({
+													id : data.Records[i].id,
+													matchOrder : data.Records[i].match_order,
+													groupChar : groupCharAnt,
+													winnerPlayerId : data.Records[i].winner_enrolled_id,
+													winnerPlayerName : data.Records[i].winner_enrolled.display_name,
+													winnerResult : winnerResult,
+													loserPlayerId : data.Records[i].loser_enrolled_id,
+													loserPlayerName : (data.Records[i].loser_enrolled != null ? data.Records[i].loser_enrolled.display_name : 'Pase directo'),
+													loserResult : loserResult,
+													matchDateTime : matchDateTime,
+													resultType : resultType,
+												});
+												
+												i++;
+											}
+										}
+									}
+									// else if not groups where added...
+									else {
+										var groupChar = '';
+										switch (round) {
+											case "8": groupChar = "8vos"; break;
+											case "4": groupChar = "4tos"; break;
+											case "2": groupChar = "Semifinales"; break;
+											case "1": groupChar = "Final"; break;
+										}
+										if (groupChar != '' && $('div[name="group-' + groupChar + '"]').length == 0) {
+											addGroup(content, { groupChar : groupChar });
+										}
+									}
+									
+									// set data refresh to true
+									// thereby, only refresh once every tab and save resources
+									content.attr("data-refresh", "true");
+								}
+								else if (data.Result == 'ERROR') {
+									$.stdShowMessage({
+										icon: 'fa fa-exclamation-triangle',
+										message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+										type: 'warning'
+									});
+								}
+								
+								// unblock UI
+								$.unblockUI;
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								$.unblockUI;
+								console.warn(jqXHR.responseText);
+							},
+						});
+					}
+				}
+				
+				// + add group
+				function addGroup(content, data) {
+					var htmlTag = 	'<div class="col-12">' +
+										'<div class="card bg-dark mt-2" name="group-' + data.groupChar + '">' +
+											'<div class="card-body">' +
+												'<div class="row">' +
+													'<div class="col-lg-12 d-flex align-items-start">' +
+														'<h5 class="text-light mr-auto">Grupo ' + data.groupChar + '</h5>' +
+														'<span class="badge badge-primary p-2" name="btn-add-match" data-value="' + data.groupChar + '"><i class="fa fa-plus"></i> Agregar partido</span>' +
+													'</div>' +
+												'</div>' +
+												'<div class="row" name="matches-content">' +
+												'</div>' +
+											'</div>' +
+										'</div>' +
+									'</div>';
+					
+					content.append(htmlTag);
+				}
+				
+				// + add match
+				function addMatch(data) {
+					var content = getMatchesContent(data.groupChar);
+					
+					var resultTypeIcon = ' <i class="fa fa-check text-success"></i>';
+					// W.O. or Abandon
+					if (data.resultType.value == 'WO' || data.resultType.value == 'AB') {
+						resultTypeIcon = ' <i class="fa fa-skull-crossbones"></i>';
+					}
+					// Stand-By
+					else if (data.resultType.value == 'SB') {
+						resultTypeIcon = ' <i class="fa fa-clock"></i>';
+					}
+					// Direct Pass
+					else if (data.resultType.value == 'DP') {
+						resultTypeIcon = ' <i class="fa fa-bolt text-warning"></i>';
+					}
+
+					var htmlTag = 	'<div class="col-lg-3 col-md-4 col-sm-6" name="match-' + data.id + '" data-order="' + data.matchOrder + '">' +
+										'<div class="card mt-2">' +
+											'<div class="card-body bg-light">' +
+												'<div class="row">' +
+													'<div class="col-lg-12 d-flex align-items-start">' +
+														'<span class="badge badge-pill badge-primary mr-auto" name="match-order">' + data.matchOrder + '</span>' +
+														'<span class="badge badge-dark" name="btn-match-photo" data-value="' + data.id + '"><i class="fa fa-camera-retro"></i></span>' +
+														'<span class="badge badge-dark ml-2" name="btn-edit-match" data-value="' + data.id + '"><i class="fa fa-edit"></i></span>' +
+														'<span class="badge badge-dark ml-2" name="btn-delete-match" data-value="' + data.id + '"><i class="fa fa-trash-alt"></i></span>' +
+													'</div>' +
+												'</div>' +
+												'<div class="row mt-2">' +
+													'<div class="col-lg-12 d-flex justify-content-between">' +
+														'<span class="small">' +
+															'<span name="match-datetime" ' +
+																'data-status="' + data.matchDateTime.status + '" ' +
+																'data-dialog="' + data.matchDateTime.dialogValue + '">' + data.matchDateTime.displayValue + '</span>' +
+														'</span>' +
+														'<span class="small">|</span>' +
+														'<span class="small"><span name="result-type-name" data-value="' + data.resultType.value + '">' + data.resultType.name + resultTypeIcon + '</span></span>' +
+													'</div>' +
+												'</div>' +
+												'<div class="row mt-3">' +
+													'<div class="col-lg-12 table-responsive-lg">' +
+														'<table class="table table-striped table-hover small">' +
+															'<thead>' +
+																'<tr>' +
+																	'<th></th>' +
+																	'<th>1er</th>' +
+																	'<th>2do</th>' +
+																	'<th>3er</th>' +
+																	// '<th>4to</th>' +
+																	// '<th>5to</th>' +
+																'</tr>' +
+															'</thead>' +
+															'<tbody>' +
+																'<tr>' +
+																	'<td data-value="' + data.winnerPlayerId + '">' + data.winnerPlayerName + (data.resultType.value == 'OK' ? ' <i class="fa fa-star text-warning"></i>' : '') + '</td>' +
+																	'<td>' + data.winnerResult[0] + '</td>' +
+																	'<td>' + data.winnerResult[1] + '</td>' +
+																	'<td>' + data.winnerResult[2] + '</td>' +
+																	//'<td>' + data.winnerResult[3] + '</td>' +
+																	// '<td>' + data.winnerResult[4] + '</td>' +
+																'</tr>' +
+																'<tr>' +
+																	'<td data-value="' + data.loserPlayerId + '">' + data.loserPlayerName + ((data.resultType.value == 'AB' || data.resultType.value == 'WO') ? ' <i class="fa fa-skull-crossbones"></i>' : (data.resultType.value == 'DP' ? ' <i class="fa fa-bolt text-warning"></i>' : '')) + '</td>' +
+																	'<td>' + data.loserResult[0] + '</td>' +
+																	'<td>' + data.loserResult[1] + '</td>' +
+																	'<td>' + data.loserResult[2] + '</td>' +
+																	// '<td>' + data.loserResult[3] + '</td>' +
+																	// '<td>' + data.loserResult[4] + '</td>' +
+																'</tr>' +
+															'</tbody>' +
+														'</table>' +
+													'</div>' +
+												'</div>' +
+											'</div>' +
+										'</div>' +
+									'</div>';
+					
+					content.append(htmlTag);
+				}
+				
+				// * edit match
+				function editMatch(data) {
+					var elem = getMatchElement(data.id);
+
+					// match order
+					elem.attr("data-order", data.matchOrder);
+					elem.find('span[name="match-order"]').text(data.matchOrder);
+					
+					// datetime
+					elem.find('span[name="match-datetime"]').attr("data-status", data.matchDateTime.status);
+					elem.find('span[name="match-datetime"]').attr("data-dialog", data.matchDateTime.dialogValue);
+					elem.find('span[name="match-datetime"]').attr("data-post", data.matchDateTime.postValue);
+					elem.find('span[name="match-datetime"]').text(data.matchDateTime.displayValue);
+					
+					// result type
+					elem.find('span[name="result-type-name"]').attr("data-value", data.resultType.value);
+					elem.find('span[name="result-type-name"]').text(data.resultType.name);
+					if (data.resultType.value == 'WO' || data.resultType.value == 'AB')
+						elem.find('span[name="result-type-name"]').append(' <i class="fa fa-skull-crossbones"></i>');
+					else if (data.resultType.value == 'SB')
+						elem.find('span[name="result-type-name"]').append(' <i class="fa fa-clock"></i>');
+					else if (data.resultType.value == 'DP')
+						elem.find('span[name="result-type-name"]').append(' <i class="fa fa-bolt text-warning"></i>');
+					else
+						elem.find('span[name="result-type-name"]').append(' <i class="fa fa-check text-success"></i>');
+
+					// winner
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(1)').text(data.winnerPlayerName);
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(1)').attr("data-value", data.winnerPlayerId);
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(1) > i').remove();
+					if (data.resultType.value == 'OK')
+						elem.find('tbody > tr:nth-child(1) > td:nth-child(1)').append(' <i class="fa fa-star text-warning"></i>');
+					
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(2)').text(data.winnerResult[0]);
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(3)').text(data.winnerResult[1]);
+					elem.find('tbody > tr:nth-child(1) > td:nth-child(4)').text(data.winnerResult[2]);
+					
+					// loser
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(1)').text(data.loserPlayerName);
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(1)').attr("data-value", data.loserPlayerId);
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(1) > i').remove();
+					if (data.resultType.value == 'AB' || data.resultType.value == 'WO')
+						elem.find('tbody > tr:nth-child(2) > td:nth-child(1)').append(' <i class="fa fa-skull-crossbones"></i>');
+					else if (data.resultType.value == 'DP')
+						elem.find('tbody > tr:nth-child(2) > td:nth-child(1)').append(' <i class="fa fa-bolt text-warning"></i>');
+					
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(2)').text(data.loserResult[0]);
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(3)').text(data.loserResult[1]);
+					elem.find('tbody > tr:nth-child(2) > td:nth-child(4)').text(data.loserResult[2]);
+				}
+				
+				// load data "add or edit" match dialog
+				function loadDataAddOrEditMatchDialog(matchId = null) {
+					var elem = getMatchElement(matchId);
+					
+					// retrieve data
+					var data = [];
+					
+					if (matchId != null) {
+						// winner
+						data["winnerPlayerId"] = elem.find('tbody > tr:nth-child(1) > td:nth-child(1)').attr("data-value");
+						data["winnerResult"] = [];
+						data["winnerResult"][0] = elem.find('tbody > tr:nth-child(1) > td:nth-child(2)').text();
+						data["winnerResult"][1] = elem.find('tbody > tr:nth-child(1) > td:nth-child(3)').text();
+						data["winnerResult"][2] = elem.find('tbody > tr:nth-child(1) > td:nth-child(4)').text();
+						
+						// loser
+						data["loserPlayerId"] = elem.find('tbody > tr:nth-child(2) > td:nth-child(1)').attr("data-value");
+						data["loserResult"] = [];
+						data["loserResult"][0] = elem.find('tbody > tr:nth-child(2) > td:nth-child(2)').text();
+						data["loserResult"][1] = elem.find('tbody > tr:nth-child(2) > td:nth-child(3)').text();
+						data["loserResult"][2] = elem.find('tbody > tr:nth-child(2) > td:nth-child(4)').text();
+						
+						// match order
+						data["matchOrder"] = elem.attr("data-order");
+						
+						// result type
+						data["resultType"] = elem.find('span[name="result-type-name"]').attr("data-value");
+						
+						// match datetime
+						data["matchDateTime"] = {};
+						data["matchDateTime"]["status"] 		= elem.find('span[name="match-datetime"]').attr("data-status");
+						data["matchDateTime"]["dialogValue"] 	= elem.find('span[name="match-datetime"]').attr("data-dialog");
+					}
+					else {
+						// winner
+						data["winnerPlayerId"] = "";
+						data["winnerResult"] = ['-', '-', '-'];
+						
+						// loser
+						data["loserPlayerId"] = "";
+						data["loserResult"] = ['-', '-', '-'];
+						
+						// match order
+						data["matchOrder"] = 1;
+						
+						// result type
+						data["resultType"] = "SB";
+						
+						// match datetime
+						data["matchDateTime"] = {};
+						data["matchDateTime"]["status"] 		= "todefine";
+						data["matchDateTime"]["dialogValue"] 	= "";
+					}
+					
+					// load data
+					var dialog = $('div[name="add-or-edit-match-dialog"]');
+					
+					// winner
+					dialog.find('select[name="winner-player-select"]').val(data["winnerPlayerId"]);
+					dialog.find('select[name="winner-set1-select"]').val(data["winnerResult"][0]);
+					dialog.find('select[name="winner-set2-select"]').val(data["winnerResult"][1]);
+					dialog.find('select[name="winner-set3-select"]').val(data["winnerResult"][2]);
+					
+					// loser
+					dialog.find('select[name="loser-player-select"]').val(data["loserPlayerId"]);
+					dialog.find('select[name="loser-set1-select"]').val(data["loserResult"][0]);
+					dialog.find('select[name="loser-set2-select"]').val(data["loserResult"][1]);
+					dialog.find('select[name="loser-set3-select"]').val(data["loserResult"][2]);
+					
+					// match order
+					dialog.find('select[name="order-select"]').attr("data-preselected", data["matchOrder"]);
+					
+					// result type
+					dialog.find('select[name="result-type-select"]').val(data["resultType"]);
+					
+					// match datetime
+					dialog.find('input[name="check-to-define"]').prop("checked", (data["matchDateTime"]["status"] == "todefine"));
+					dialog.find('input[name="match-datetime"]').val(data["matchDateTime"]["dialogValue"]);
+				}
+				
+				// check viewport
+				function isBreakpoint(alias) {
+					return $('.device-' + alias).is(':visible');
+				}
+				
+				// get matches content
+				function getMatchesContent(groupChar) {
+					return $('div.card[name="group-' + groupChar + '"] > div.card-body > div[name="matches-content"]');
+				}
+				
+				// get match element
+				function getMatchElement(matchId) {
+					return $('div[name="match-' + matchId + '"]');
+				}
+				
+				// show add group dialog
+				function showAddGroupDialog() {
+					
+					// define dialog width
+					var dialogWidth = "300";
+					if (isBreakpoint('sm') || isBreakpoint('xs')) {
+						dialogWidth = "95%";
+					}
+					
+					$('div[name="add-group-dialog"]')
+						.dialog({ width: dialogWidth})
+						.dialog("open");
+				}
+				
+				// show "add or edit" match dialog
+				function showAddOrEditMatchDialog(title, onSave) {
+
+					// define dialog width
+					var dialogWidth = "30%";
+					if (isBreakpoint('sm') || isBreakpoint('xs')) {
+						dialogWidth = "95%";
+					}
+					
+					$('div[name="add-or-edit-match-dialog"]')
+						.dialog("option", "title", title)
+						.dialog("option", "onSave", onSave)
+						.dialog({ width : dialogWidth })
+						.dialog("open");
+					
+					// players chosen select
+					$('select[name$="-player-select"]')
+						.chosen({ max_shown_results : 6 })
+						.trigger('chosen:updated');
+						
+					// execute change event to disable or enable inputs
+					$('select[name="result-type-select"]').change();
+					$('input[name="check-to-define"]').change();
+					
+					// update order options
+					var round 				= parseInt(getCurrentContent().attr("data-round"));
+					var orderSelect 		= $('select[name="order-select"]');
+					var preselectedOrder 	= orderSelect.attr("data-preselected");
+					orderSelect.empty();
+					if (round == 0)
+						round = 21;
+					for (var i = 1; i < (round + 1); i++)
+						orderSelect.append('<option value="' + i + '">' + i + '</option>');
+					orderSelect.val(preselectedOrder);
+				}
+				
+				// show add match dialog
+				function showAddMatchDialog(groupChar) {
+					var tournament_id 	= $('select[name="tournaments-select"]').val();
+					var category_id 	= $('select[name="categories-select"]').val();
+					
+					// load empty data to match dialog
+					loadDataAddOrEditMatchDialog();
+					
+					// create match function
+					var onSave = function(postData, dialogData, postSaveCallback) {
+						postData["group_char"] = groupChar;
+						
+						$.ajax({
+							method: 'POST',
+							url: '/matches/create/' + tournament_id + '/' + category_id,
+							dataType: 'json',
+							data: postData,
+							success: function(data, textStatus, jqXHR) {
+								if (data.Result == 'OK') {
+									// update dialog data
+									dialogData["id"] 		= data.Record.id;
+									dialogData["groupChar"] = groupChar;
+									
+									// + add match
+									addMatch(dialogData);
+									
+									// execute callback
+									postSaveCallback(data.Record.id);
+								}
+								else if (data.Result == 'ERROR') {
+									$.stdShowMessage({
+										icon: 'fa fa-exclamation-triangle',
+										message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+										type: 'warning'
+									});
+								}
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								console.warn(jqXHR.responseText);
+							},
+						});
+					};
+									
+					showAddOrEditMatchDialog("Agregar partido", onSave);
+				}
+				
+				// show edit match dialog
+				function showEditMatchDialog(matchId) {
+
+					// load data "add or edit" match dialog
+					loadDataAddOrEditMatchDialog(matchId);
+					
+					// edit match function
+					var onSave = function(postData, dialogData, postSaveCallback) {
+						postData['id'] = matchId;
+						
+						$.ajax({
+							method: 'POST',
+							url: '/matches/update',
+							dataType: 'json',
+							data: postData,
+							success: function(data, textStatus, jqXHR) {
+								if (data.Result == 'OK') {
+									// update dialog data
+									dialogData["id"] = matchId;
+									
+									// * edit match
+									editMatch(dialogData);
+									
+									// execute callback
+									postSaveCallback(matchId);
+								}
+								else if (data.Result == 'ERROR') {
+									$.stdShowMessage({
+										icon: 'fa fa-exclamation-triangle',
+										message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+										type: 'warning'
+									});
+								}
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								console.warn(jqXHR.responseText);
+							},
+						});
+					};
+									
+					showAddOrEditMatchDialog("Editar partido", onSave);
+				}
+				
+				// show delete match dialog
+				function showDeleteMatchDialog(matchId) {
+					
+					// define dialog width
+					var dialogWidth = "300";
+					if (isBreakpoint('sm') || isBreakpoint('xs')) {
+						dialogWidth = "95%";
+					}
+					
+					$('div[name="delete-match-dialog"]')
+						.dialog("option", "matchId", matchId)
+						.dialog({ width : dialogWidth })
+						.dialog("open");
+				}
+				
+				// show match photo dialog
+				function showMatchPhotoDialog(matchId) {
+					
+					// define dialog width
+					var dialogWidth = "20%";
+					if (isBreakpoint('sm') || isBreakpoint('xs')) {
+						dialogWidth = "95%";
+					}
+					
+					$('div[name="match-photo-dialog"]')
+						.dialog("option", "matchId", matchId)
+						.dialog({ width : dialogWidth })
+						.dialog("open");
+					
+					// load photo from server if exists
+					$.ajax({
+						method: 'POST',
+						url: '/matches/photos/download/' + matchId,
+						beforeSend : function() {
+							// empty photo
+							$('img[name="match-photo-image"]').attr("src", "");
+						}, 
+						success: function(data, textStatus, jqXHR) {
+							if (data.Result == 'OK') {
+								$('img[name="match-photo-image"]').attr("src", data.Photo.public_url);
+							}
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							console.warn(jqXHR.responseText);
+						},
+					});
+				}
+				
+				// sort matches
+				function sortMatches(matchId) {
+					var content = getMatchElement(matchId).parent();
+					var matches = content.find('div[name^="match-"]');
+					
+					var matchesSorted = quickSort(matches, 0, matches.length - 1);
+
+					for (var i = 0; i < matchesSorted.length; i++)
+						content.append(matchesSorted[i]);
+				}
+				
+				// quick sort
+				function quickSort(arr, left, right) {
+					var len = arr.length, 
+					pivot,
+					partitionIndex;
+
+					if (left < right) {
+						pivot = right;
+						partitionIndex = partition(arr, pivot, left, right);
+
+						//sort left and right
+						quickSort(arr, left, partitionIndex - 1);
+						quickSort(arr, partitionIndex + 1, right);
+					}
+					return arr;
+				}
+				
+				// partition
+				function partition(arr, pivot, left, right) {
+					var pivotValue = arr[pivot],
+					partitionIndex = left;
+
+					for (var i = left; i < right; i++){
+						if (parseInt(arr[i].dataset.order) < parseInt(pivotValue.dataset.order)){
+							swap(arr, i, partitionIndex);
+							partitionIndex++;
+						}
+					}
+					swap(arr, right, partitionIndex);
+					return partitionIndex;
+				}
+				
+				// swap
+				function swap(arr, i, j) {
+					var temp = arr[i];
+					arr[i] = arr[j];
+					arr[j] = temp;
+				}
+			
+				// update tree
+				function updateTree() {
+					$('div[name="tree-wrapper"]').empty();
+					$('div[name="tree-wrapper"]').append('<hr>');
+					$('div[name="tree-wrapper"]').append('<label><b>Previsualización del Draw</b></label>');
+					$('div[name="tree-wrapper"]').append('<div class="chart" id="tree-content"></div>');
+					
+					var tree_structure = {
+						chart: {
+							container: "#tree-content",
+							levelSeparation:    20,
+							siblingSeparation:  15,
+							subTeeSeparation:   15,
+							rootOrientation: "EAST",
+							
+							node: {
+								HTMLclass: "tennis-draw",
+								drawLineThrough: true
+							},
+							connectors: {
+								type: "step",
+								style: {
+									"stroke-width": 1,
+									"stroke": "#212529"
+								}
+							}
+						},
+					};
+					
+					var tournament_id 	= $('select[name="tournaments-select"]').val();
+					var category_id 	= $('select[name="categories-select"]').val();
+					
+					$.ajax({
+						method: 'POST',
+						url: '/matches/draw/' + tournament_id + '/' + category_id,
+						success: function(data, textStatus, jqXHR) {
+							if (data.Result == 'OK') {
+								
+								// set draw
+								tree_structure['nodeStructure'] = data.Draw;
+								
+								// create tree view
+								new Treant(tree_structure);
+							}
+							else if (data.Result == 'ERROR') {
+								$.stdShowMessage({
+									icon: 'fa fa-exclamation-triangle',
+									message: 'Ups! Algo salió mal. <br>Vuelva a intentarlo más tarde.',
+									type: 'warning'
+								});
+							}
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							console.warn(jqXHR.responseText);
+						},
+					});
+				}
+				
+			});
+		</script>
+	</body>
+</html>

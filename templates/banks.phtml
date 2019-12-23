@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-lg-6">
+						<div class="card mt-3">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-university"></i> Bancos</b></span>
+							</div>
+							<div class="card-body">
+							    <div class="row">
+							        <div class="col">
+							            <div name="table-content"></div>
+							        </div>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<!-- Optional JavaScript -->
+		<script>
+			$(function(){
+				
+				// table-content
+				$('div[name="table-content"]').jtable({
+					title: ' ',
+					columnSelectable: false,
+					showCommandButtons: false,
+					paging: true,
+					pageList: 'normal',
+					pageSize: 10,
+					actions: {
+						listAction: '/banks/read',
+						deleteAction: '/banks/remove',
+						updateAction: '/banks/update',
+						createAction: '/banks/create'
+					},
+					fields: {
+						id: {
+							key: true,
+							create: false,
+							edit: false,
+							list: false
+						},
+						unique_code: {
+							title: 'Código',
+							width: '30%',
+							inputClass: 'form-control',
+						},
+						description: {
+							title: 'Descripción',
+							width: '40%',
+							inputClass: 'form-control',
+						},
+						menu: {
+							title: '',
+							width: '10%',
+							edit: false,
+							create: false,
+							display: function (data) {
+								return '<span class="btn btn-light btn-sm" name="btn-table-context-menu" data-record-key="' + data.record.id + '"><i class="fa fa-ellipsis-v"></i></span>';
+							},
+						},
+					}
+				});
+		 
+				//Load list from server
+				$('div[name="table-content"]').jtable('load');
+				
+				// Add Bootstrap style to jTable
+				$.stdjTableBootstrapStyle();
+				
+				// Context Menu
+				$.contextMenu({
+					selector: 'span[name="btn-table-context-menu"]',
+					trigger: 'left',
+					items: {
+						"edit": {
+							name: '<span><i class="fa fa-edit"></i> Editar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								$row = $('tr.jtable-data-row[data-record-key="' + opt.$trigger.attr('data-record-key') + '"]');
+								$('div[name="table-content"]').jtable('showEditForm', $row);
+								return true;
+							},
+						},
+						"delete": {
+							name: '<span><i class="fa fa-trash-alt"></i> Eliminar</span>',
+							isHtmlName: true,
+							callback: function(itemKey, opt, e) {
+								$row = $('tr.jtable-data-row[data-record-key="' + opt.$trigger.attr('data-record-key') + '"]');
+								$('div[name="table-content"]').jtable('showDeleteDialog', $row);
+								return true;            
+							}   
+						},
+					}
+				});
+				
+			});
+		</script>
+	</body>
+</html>

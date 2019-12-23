@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<?= $this->fetch('/partials/header.phtml') ?>
+		
+		<style>
+			textarea {
+				border: none;
+				overflow: auto;
+				outline: none;
+				-webkit-box-shadow: none;
+				-moz-box-shadow: none;
+				box-shadow: none;
+				resize: none; /*remove the resize handle on the bottom right*/
+				font: 15px Courier New;
+				width: 100%;
+				height: 1000px;
+			}
+		</style>
+	</head>
+	<body>
+		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
+		
+		<?php $collectionsDocsTypes_enabled	= (isset($collectionsDocsTypes) and count($collectionsDocsTypes) > 0); ?>
+		<?php $paymentsDocsTypes_enabled	= (isset($paymentsDocsTypes) and count($paymentsDocsTypes) > 0); ?>
+		
+		<div class="container-fluid">
+			<div class="content">
+				<div class="row">
+					<div class="col-12 p-0">
+						<div class="card card-no-rounded" style="height:100%">
+							<div class="card-header d-flex justify-content-between">
+								<span><b><i class="fa fa-list-ul"></i> Listado de Medios de Pago</b></span>
+							</div>
+							<div class="card-body">
+								
+								<div class="row">
+									
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group">
+											<label class="font-weight-bold">Medios de Pago:</label>
+											<br>
+											<select class="form-control" name="payment-methods-select">
+												<option value="cash-ars">Efectivo AR$</option>
+												<option value="cash-usd">Efectivo U$D</option>
+												<option value="third.party.check">Cheque de Tercero</option>
+											</select>
+										</div>
+									</div>
+								
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group">
+											<label class="font-weight-bold">Comp. de Cobros:</label>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="checkbox" name="collections-docs-types-check-nothing">
+												<label class="form-check-label">Ninguno</label>
+											</div>
+											<br>
+											<label <?= !$collectionsDocsTypes_enabled ? '' : 'class="d-none" ' ?>name="collections-docs-types-label"><i class="fa fa-exclamation-triangle"></i> No hay documentos disponibles!</label>
+											<select class="form-control<?= $collectionsDocsTypes_enabled ? '' : ' d-none' ?>" name="collections-docs-types-select" multiple="multiple">
+											<?php if ($collectionsDocsTypes_enabled) : ?>
+											<?php foreach($collectionsDocsTypes as $documentType) : ?>
+												<option
+													value="<?= $documentType->unique_code ?>">
+													<?= trim($documentType->description) ?>
+												</option>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+									
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group">
+											<label class="font-weight-bold">Comp. de Pagos:</label>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="checkbox" name="payments-docs-types-check-nothing">
+												<label class="form-check-label">Ninguno</label>
+											</div>
+											<br>
+											<label <?= !$paymentsDocsTypes_enabled ? '' : 'class="d-none" ' ?>name="payments-docs-types-label"><i class="fa fa-exclamation-triangle"></i> No hay documentos disponibles!</label>
+											<select class="form-control<?= $paymentsDocsTypes_enabled ? '' : ' d-none' ?>" name="payments-docs-types-select" multiple="multiple">
+											<?php if ($paymentsDocsTypes_enabled) : ?>
+											<?php foreach($paymentsDocsTypes as $documentType) : ?>
+												<option
+													value="<?= $documentType->unique_code ?>">
+													<?= trim($documentType->description) ?>
+												</option>
+											<?php endforeach; ?>
+											<?php endif; ?>
+											</select>
+										</div>
+									</div>
+									
+								</div>
+								
+								<div class="row">
+							        <div class="col">
+										<div class="btn btn-outline-primary" name="btn-report"><i class="fa fa-report"></i> Generar Reporte</div>
+									<div>
+								</div>
+								
+								<hr>
+									
+							    <div class="row mt-3">
+							        <div class="col">
+							            <div id="pivot"></div>
+							        </div>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+			
+		<?= $this->fetch('/partials/libs.phtml') ?>
+		
+		<!-- Optional JavaScript -->
+		<script>
+			$(function(){
+				
+				$(document).ajaxStart(
+					function() {
+						$.blockUI({ message: "Procesando..." });
+					}
+				).ajaxStop(
+					function() {
+						$.unblockUI();
+					}
+				);
+				
+				if ( !$('select[name="payment-methods-select"]').hasClass('d-none') )
+					$('select[name="payment-methods-select"]').select2({ width: '100%' });
+				
+				if ( !$('select[name="collections-docs-types-select"]').hasClass('d-none') )
+					$('select[name="collections-docs-types-select"]').select2({ width: '100%' });
+				
+				if ( !$('select[name="payments-docs-types-select"]').hasClass('d-none') )
+					$('select[name="payments-docs-types-select"]').select2({ width: '100%' });
+				
+				// click on report
+				$('div[name="btn-report"]').on('click', function(e) {
+					e.preventDefault();
+					
+					var paymentMethodCode = $('select[name="payment-methods-select"]').val();
+					
+					var collectionsDocsCodes = ['x'];
+					if ( !$('input[name="collections-docs-types-check-nothing"]').prop('checked') ) {
+						collectionsDocsCodes = $('select[name="collections-docs-types-select"]').val();
+					}
+					
+					var paymentsDocsCodes = ['x'];
+					if ( !$('input[name="payments-docs-types-check-nothing"]').prop('checked') ) {
+						paymentsDocsCodes = $('select[name="payments-docs-types-select"]').val();
+					}
+					
+					$.ajax({
+						method: 'POST',
+						url: '/cash/pivot',
+						data: { 
+							payment_method_code : 	paymentMethodCode,
+							collections_docs_codes : collectionsDocsCodes,
+							payments_docs_codes : 	paymentsDocsCodes,
+						},
+						success: function(data, textStatus, jqXHR) {
+							
+							if (data.Result == 'OK') {
+								if (data.Result == 'OK')
+    							{
+    								$("#pivot").pivotUI(data.Records);
+    							}
+    							else {
+    								alert('error');
+    							}
+							}
+							else {
+								alert('error');
+							}
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							console.warn(jqXHR.responseText);
+						},
+					});
+				});
+				
+				// checkboxes
+				$('input[name="collections-docs-types-check-nothing"]').on('change', function(e) {
+					var checked = $(this).prop('checked');
+					$('select[name="collections-docs-types-select"]').prop("disabled", checked);
+				});
+				
+				$('input[name="payments-docs-types-check-nothing"]').on('change', function(e) {
+					var checked = $(this).prop('checked');
+					$('select[name="payments-docs-types-select"]').prop("disabled", checked);
+				});
+				
+			});
+		</script>
+	</body>
+</html>
