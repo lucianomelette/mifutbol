@@ -327,6 +327,9 @@ class CashReportsController extends Controller
 										->when($type == 'third.party.check', function($q1) {
 											$q1->whereHas('detailsThirdPartyChecks');
 										})
+										->when($type == 'own.check', function($q1) {
+											$q1->where(false);
+										})
 										->orderBy('dated_at', 'ASC')
 										->get();
 				
@@ -346,6 +349,9 @@ class CashReportsController extends Controller
 									})
 									->when($type == 'third.party.check', function($q1) {
 										$q1->whereHas('detailsThirdPartyChecks');
+									})
+									->when($type == 'own.check', function($q1) {
+										$q1->whereHas('detailsOwnChecks');
 									})
 									->orderBy('dated_at', 'ASC')
 									->get();
@@ -431,6 +437,11 @@ class CashReportsController extends Controller
 				    $tipo = "Cheques de Terceros";
 					$details = $document->detailsThirdPartyChecks;
 					break;
+
+				case "own.check":
+					$tipo = "Cheques Propios";
+					$details = $document->detailsOwnChecks;
+					break;
 			}
 			
 			foreach($details as $detail)
@@ -451,7 +462,8 @@ class CashReportsController extends Controller
 				
 				switch($type)
     			{
-    				case "third.party.check":
+					case "third.party.check":
+					case "own.check":
     				    
     				    $key = $detail->bank_id . '_' . $detail->number . '_' . $detail->expiration_at . '_' . $detail->amount;
     				    
