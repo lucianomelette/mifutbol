@@ -20,6 +20,11 @@ class PaymentHeader extends Model
 		'project_id',
 		'is_canceled',
 	];
+
+	public function project()
+	{
+		return $this->hasOne('\App\Models\Project', 'id', 'project_id');
+	}
 	
 	public function supplier()
 	{

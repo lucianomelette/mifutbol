@@ -21,6 +21,11 @@ class CollectionHeader extends Model
 		'is_canceled',
 	];
 	
+	public function project()
+	{
+		return $this->hasOne('\App\Models\Project', 'id', 'project_id');
+	}
+
 	public function customer()
 	{
 		return $this->hasOne('\App\Models\Customer', 'id', 'customer_id');

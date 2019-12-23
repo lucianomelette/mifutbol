@@ -14,6 +14,11 @@ class Project extends Model
 		'photo_id',
 		'company_id',
 	];
+
+	public function company()
+	{
+		return $this->hasOne('App\Models\Company', 'id', 'company_id');
+	}
 	
 	public function salesDocumentsTypes()
     {

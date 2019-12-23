@@ -307,8 +307,12 @@ class CashReportsController extends Controller
 		
 		$type           = $split[0];
 		$currencyCode   = strtoupper($split[1]);
+
+		$companyId = $_SESSION['company_session']->id;
 		
-		$collections = CollectionHeader::where('project_id', $_SESSION['project_session']->id)
+		$collections = CollectionHeader::whereHas('project', function($q) use ($companyId) {
+											$q->company->find($companyId); 
+										})
 										->where('is_canceled', false)
 										->when($collections_docs_codes != null, function($query) use ($collections_docs_codes) {
 											$query->whereIn('document_type_code', $collections_docs_codes);
@@ -324,7 +328,9 @@ class CashReportsController extends Controller
 										->orderBy('dated_at', 'ASC')
 										->get();
 				
-		$payments = PaymentHeader::where('project_id', $_SESSION['project_session']->id)
+		$payments = PaymentHeader::whereHas('project', function($q) use ($companyId) {
+										$q->company->find($companyId); 
+									})
 									->where('is_canceled', false)
 									->when($payments_docs_codes != null, function($query) use ($payments_docs_codes) {
 										$query->whereIn('document_type_code', $payments_docs_codes);
