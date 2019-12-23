@@ -16,4 +16,9 @@ class PaymentDetailOwnCheck extends Model
 		'expiration_at',
 		'amount',
 	];
+
+	public function bankAccount()
+	{
+		return $this->hasOne('\App\Models\BankAccount', 'id', 'bank_account_id');
+	}
 }

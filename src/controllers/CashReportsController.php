@@ -487,9 +487,10 @@ class CashReportsController extends Controller
 						break;
 						
 					case "own.check":
-						$value->{"No. de Cheque"}	= $detail->number;
-    				    $value->{"Banco"}      		= $detail->bank->description;
-						$value->{"Vencimiento"}		= $detail->expiration_at;
+						$value->{"No. de Cheque"}		= $detail->number;
+    				    $value->{"No. Cta. Bancaria"}   = $detail->bankAccount->number;
+    				    $value->{"Banco"}   			= $detail->bankAccount->bank->description;
+						$value->{"Vencimiento"}			= $detail->expiration_at;
 						break;
     			}
 			    
