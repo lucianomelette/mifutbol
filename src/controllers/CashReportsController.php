@@ -328,7 +328,7 @@ class CashReportsController extends Controller
 											$q1->whereHas('detailsThirdPartyChecks');
 										})
 										->when($type == 'own.check', function($q1) {
-											$q1->where(false);
+											$q1->where('id', -1); // no records
 										})
 										->orderBy('dated_at', 'ASC')
 										->get();
