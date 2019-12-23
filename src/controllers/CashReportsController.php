@@ -460,7 +460,7 @@ class CashReportsController extends Controller
     				    $value->{"Vencimiento"}		= $detail->expiration_at;
     				    $value->{"Clave"}      		= $key;
     				    $value->{"Acumulado"}  		= $value->Monto;
-    				    $value->{"En Cartera"} 		= "Sí";
+    				    $value->{"En Cartera"} 		= ($value->Monto > 0) ? "Sí" : "No";
     				    
     				    foreach($records as &$elem)
     				    {
@@ -469,8 +469,8 @@ class CashReportsController extends Controller
     				            $elem->Acumulado    += $value->Monto;
     				            $value->Acumulado   = $elem->Acumulado;
     				            
-				                $elem->{"En Cartera"}   = ($elem->Acumulado == 0) ? "No" : "Sí";
-				                $value->{"En Cartera"}  = ($elem->Acumulado == 0) ? "No" : "Sí";
+				                $elem->{"En Cartera"}   = ($elem->Acumulado > 0) ? "Sí" : "No";
+				                $value->{"En Cartera"}  = ($elem->Acumulado > 0) ? "Sí" : "No";
     				        }
     				    }
     				    
