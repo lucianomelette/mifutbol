@@ -463,7 +463,6 @@ class CashReportsController extends Controller
 				switch($type)
     			{
 					case "third.party.check":
-					case "own.check":
     				    
     				    $key = $detail->bank_id . '_' . $detail->number . '_' . $detail->expiration_at . '_' . $detail->amount;
     				    
@@ -485,8 +484,13 @@ class CashReportsController extends Controller
 				                $value->{"En Cartera"}  = ($elem->Acumulado > 0) ? "Sí" : "No";
     				        }
     				    }
-    				    
-    					break;
+						break;
+						
+					case "own.check":
+						$value->{"No. de Cheque"}	= $detail->number;
+    				    $value->{"Banco"}      		= $detail->bank->description;
+						$value->{"Vencimiento"}		= $detail->expiration_at;
+						break;
     			}
 			    
 				array_push($records, $value);
