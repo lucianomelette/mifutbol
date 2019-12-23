@@ -446,6 +446,7 @@ class CashReportsController extends Controller
 					"Descripción"	=> $description,
 					"Tipo"		    => $tipo,
 					"Monto"		    => $this->parsedFloat($detail->amount * $balanceMultiplier, 2),
+					"Proyecto"		=> $document->project->full_name,
 				];
 				
 				switch($type)
