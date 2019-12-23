@@ -436,10 +436,10 @@ class CashReportsController extends Controller
 			foreach($details as $detail)
 			{
 			    $value = (object)[
-					"ID"            => $document->id,
-					"Módulo"        => $module,
-					"Fecha"         => $document->dated_at,
-					"Número"        => $document->number,
+					"ID"          	=> $document->id,
+					"Módulo"      	=> $module,
+					"Fecha"       	=> $document->dated_at,
+					"No. de Comp."  => $document->number,
 					"Código"        => $document->document_type_code,
 					"Comprobante"   => $document->documentType->description,
 					"Razón Social"  => $businessName,
@@ -455,12 +455,12 @@ class CashReportsController extends Controller
     				    
     				    $key = $detail->bank_id . '_' . $detail->number . '_' . $detail->expiration_at . '_' . $detail->amount;
     				    
-    				    $value->{"Número de Cheque"}    = $detail->number;
-    				    $value->{"Banco"}               = $detail->bank->description;
-    				    $value->{"Vencimiento"}         = $detail->expiration_at;
-    				    $value->{"Clave"}               = $key;
-    				    $value->{"Acumulado"}           = $value->Monto;
-    				    $value->{"En Cartera"}          = "Sí";
+    				    $value->{"No. de Cheque"}	= $detail->number;
+    				    $value->{"Banco"}      		= $detail->bank->description;
+    				    $value->{"Vencimiento"}		= $detail->expiration_at;
+    				    $value->{"Clave"}      		= $key;
+    				    $value->{"Acumulado"}  		= $value->Monto;
+    				    $value->{"En Cartera"} 		= "Sí";
     				    
     				    foreach($records as &$elem)
     				    {
