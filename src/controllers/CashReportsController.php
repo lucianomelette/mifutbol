@@ -311,7 +311,9 @@ class CashReportsController extends Controller
 		$companyId = $_SESSION['company_session']->id;
 		
 		$collections = CollectionHeader::whereHas('project', function($q) use ($companyId) {
-											$q->company->find($companyId); 
+											$q->whereHas('company', function($q1) use ($companyId) {
+												$q1->find($companyId);
+											});
 										})
 										->where('is_canceled', false)
 										->when($collections_docs_codes != null, function($query) use ($collections_docs_codes) {
@@ -329,7 +331,9 @@ class CashReportsController extends Controller
 										->get();
 				
 		$payments = PaymentHeader::whereHas('project', function($q) use ($companyId) {
-										$q->company->find($companyId); 
+										$q->whereHas('company', function($q1) use ($companyId) {
+											$q1->find($companyId);
+										});
 									})
 									->where('is_canceled', false)
 									->when($payments_docs_codes != null, function($query) use ($payments_docs_codes) {
