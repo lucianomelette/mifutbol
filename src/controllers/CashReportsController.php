@@ -312,7 +312,7 @@ class CashReportsController extends Controller
 		
 		$collections = CollectionHeader::whereHas('project', function($q) use ($companyId) {
 											$q->whereHas('company', function($q1) use ($companyId) {
-												$q1->find($companyId);
+												$q1->where('id', $companyId);
 											});
 										})
 										->where('is_canceled', false)
@@ -332,7 +332,7 @@ class CashReportsController extends Controller
 				
 		$payments = PaymentHeader::whereHas('project', function($q) use ($companyId) {
 										$q->whereHas('company', function($q1) use ($companyId) {
-											$q1->find($companyId);
+											$q1->where('id', $companyId);
 										});
 									})
 									->where('is_canceled', false)
