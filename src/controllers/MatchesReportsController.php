@@ -18,7 +18,7 @@ class MatchesReportsController extends Controller
 			],
 		];		
 		
-		return $this->container->renderer->render($response, 'sales_pivot.phtml', $args);
+		return $this->container->renderer->render($response, 'matches_pivot.phtml', $args);
 	}
 	
 	public function pivot($request, $response, $args)
