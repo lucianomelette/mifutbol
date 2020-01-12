@@ -8,7 +8,7 @@ use App\Models\Exchange;
 
 use Carbon\Carbon;
  
-class SalesReportsController extends Controller
+class MatchesReportsController extends Controller
 {
 	public function __invoke($request, $response, $params)
 	{
