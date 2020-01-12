@@ -4,7 +4,7 @@ namespace App\Models;
  
 use Illuminate\Database\Eloquent\Model;
 
-class SaleHeader extends Model
+class Match extends Model
 {
 	protected $table = 'matches';
 	protected $fillable = [
