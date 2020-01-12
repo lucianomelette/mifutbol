@@ -20,8 +20,8 @@ return [
         'db' => [
             'driver' => 'mysql',
             'host' => 'localhost',
-            'database' => 'u859902207_brkdb',
-            'username' => 'u859902207_brksa',
+            'database' => 'u859902207_futdb',
+            'username' => 'u859902207_futsa',
             'password' => 'I5E:EUy=suUW4f0LT9',
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',

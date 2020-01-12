@@ -4,15 +4,15 @@ namespace App\Models;
  
 use Illuminate\Database\Eloquent\Model;
 
-class Exchange extends Model
+class SaleHeader extends Model
 {
-	protected $table = 'exchange';
+	protected $table = 'matches';
 	protected $fillable = [
 		'id',
 		'dated_at',
-		'currency_code',
-		'price',
-		'company_id',
+		'white_result',
+		'black_result',
+		'comments',
+		'is_canceled',
 	];
-	
 }
