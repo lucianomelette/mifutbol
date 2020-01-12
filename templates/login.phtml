@@ -48,7 +48,7 @@
 						data: $('form').serialize(),
 						success: function(data, textStatus, jqXHR) {
 							if (data.status == 'ok') {
-								window.location.replace('/login/companies/selection');
+								window.location.replace('/matches');
 							}
 							else if (data.status == 'error') {
 								$.stdShowMessage({
