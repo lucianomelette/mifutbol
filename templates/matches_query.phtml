@@ -66,7 +66,11 @@
 							title: 'Fecha',
 							width: '10%',
 							display: function(data) {
-								return new Date(data.record.dated_at).toLocaleDateString();
+								var options = {
+									timeZone: 'UTC',
+									timeZoneName: 'GMT-03:00'
+								};
+								return new Date(data.record.dated_at).toLocaleDateString('es-AR', options);
 							}
 						},
 						white_result: {
