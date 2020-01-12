@@ -18,8 +18,8 @@ $app->group('/login', function() use ($sessionAuth, $companyAuth) {
 // matches
 $app->group('/matches', function() {
 	// pivot
-	$this->get('/pivot', 'MatchesReportsController:pivot');
-	$this->post('/pivot', 'MatchesReportsController:pivotData');
+	$this->get('/pivot', 'MatchesReportsController');
+	$this->post('/pivot', 'MatchesReportsController:pivot');
 	
 	// query
 	$this->get('/query', 'MatchesController:query');
