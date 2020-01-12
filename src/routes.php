@@ -6,7 +6,7 @@ use Slim\Http\Response;
 // Routes
 
 $app->get('/', function($request, $response) {
-	return $response->withRedirect($this->router->pathFor('suppliers'));
+	return $response->withRedirect($this->router->pathFor('matches'));
 });
 
 $app->group('/login', function() use ($sessionAuth, $companyAuth) {
@@ -25,6 +25,6 @@ $app->group('/matches', function() {
 	$this->get('/query', 'MatchesController:query');
 	
 	// general
-	$this->get('[/{matchId}]', 'MatchesController');
+	$this->get('[/{matchId}]', 'MatchesController')->setName('matches');
 	$this->post('/{action}[/{matchId}]', 'MatchesController:action');
-})->add($appAuth)->add($sessionAuth)->add($hostAuth);
+})->add($hostAuth);
