@@ -20,7 +20,8 @@ class MatchesReportsController extends Controller
 	public function pivot($request, $response, $args)
 	{
 		$matches = Match::where('is_canceled', false)->get();
-	                                    
+		$records = Array();	  
+		
 		foreach($matches as $match)
 		{			
 	        array_push($records, (object)[
