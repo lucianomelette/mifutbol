@@ -15,13 +15,6 @@
 								<span><b><i class="fa fa-search"></i> Buscar Resultados</b></span>
 							</div>
 							<div class="card-body">
-								
-								<div class="row">
-							        <div class="col">
-										<div class="btn btn-outline-primary" name="btn-search"><i class="fa fa-search"></i> Buscar</div>
-									<div>
-								</div>
-							
 							    <div class="row">
 							        <div class="col">
 							            <div name="table-content"></div>
@@ -72,6 +65,9 @@
 						dated_at: {
 							title: 'Fecha',
 							width: '10%',
+							display: function(data) {
+								return new Date(data.record.dated_at).toLocaleString();
+							}
 						},
 						white_result: {
 							title: 'Blancos',
