@@ -6,54 +6,15 @@
 	<body>
 		<?= $this->fetch('/partials/navbar.phtml', $navbar) ?>
 		
-		<?php $customers_enabled 		= (isset($customers) and count($customers) > 0); ?>
-		<?php $documentsTypes_enabled	= (isset($documentsTypes) and count($documentsTypes) > 0); ?>
-		
 		<div class="container-fluid">
 			<div class="content">
 				<div class="row">
 					<div class="col-lg-12 p-0">
 						<div class="card card-no-rounded">
 							<div class="card-header d-flex justify-content-between">
-								<span><b><i class="fa fa-search"></i> Ventas <i class="fa fa-chevron-right"></i> Consulta de Comprobantes</b></span>
+								<span><b><i class="fa fa-search"></i> Buscar Resultados</b></span>
 							</div>
 							<div class="card-body">
-								<div class="row">
-									<div class="col-lg-3 col-md-6">
-										<div class="form-group">
-											<label class="font-weight-bold">Clientes:</label>
-											<br>
-											<label <?= !$customers_enabled ? '' : 'class="d-none" ' ?>name="customers-label"><i class="fa fa-exclamation-triangle"></i> No hay clientes disponibles!</label>
-											<select class="form-control<?= $customers_enabled ? '' : ' d-none' ?>" name="customers-select" multiple="multiple">
-											<?php if ($customers_enabled) : ?>
-											<?php foreach($customers as $customer) : ?>
-												<option value="<?= $customer->id ?>">
-													<?= $customer->unique_code . ' | ' . $customer->business_name ?>
-												</option>
-											<?php endforeach; ?>
-											<?php endif; ?>
-											</select>
-										</div>
-									</div>
-									
-									<div class="col-lg-3 col-md-6">
-										<div class="form-group">
-											<label class="font-weight-bold">Comprobantes:</label>
-											<br>
-											<label <?= !$documentsTypes_enabled ? '' : 'class="d-none" ' ?>name="docs-types-label"><i class="fa fa-exclamation-triangle"></i> No hay documentos disponibles!</label>
-											<select class="form-control<?= $documentsTypes_enabled ? '' : ' d-none' ?>" name="docs-types-select" multiple="multiple">
-											<?php if ($documentsTypes_enabled) : ?>
-											<?php foreach($documentsTypes as $documentType) : ?>
-												<option
-													value="<?= $documentType->unique_code ?>">
-													<?= trim($documentType->description) ?>
-												</option>
-											<?php endforeach; ?>
-											<?php endif; ?>
-											</select>
-										</div>
-									</div>
-								</div>
 								
 								<div class="row">
 							        <div class="col">
@@ -78,14 +39,8 @@
 		
 		<!-- Optional JavaScript -->
 		<script>
-			$(function(){
-				
-				if ( !$('select[name="customers-select"]').hasClass('d-none') )
-					$('select[name="customers-select"]').select2({ width: '100%' });
-				
-				if ( !$('select[name="docs-types-select"]').hasClass('d-none') )
-					$('select[name="docs-types-select"]').select2({ width: '100%' });
-				
+			$(function()
+			{
 				// table-content
 				$('div[name="table-content"]').jtable({
 					title: ' ',
@@ -95,8 +50,8 @@
 					pageList: 'normal',
 					pageSize: 10,
 					actions: {
-						listAction: '/sales/read',
-						deleteAction: '/sales/remove',
+						listAction: '/matches/read',
+						deleteAction: '/matches/remove',
 					},
 					fields: {
 						id: {
@@ -118,39 +73,19 @@
 							title: 'Fecha',
 							width: '10%',
 						},
-						document_type_code: {
-							title: 'Código',
+						white_result: {
+							title: 'Blancos',
 							width: '10%',
 						},
-						number: {
-							title: 'Número',
-							width: '20%',
-							listClass: 'd-none d-lg-table-cell',
-						},
-						customer_id: {
-							title: 'Proveedor',
-							width: '30%',
-							options: '/customers/options',
-						},
-						total: {
-							title: 'Total',
-							width: '20%',
+						black_result: {
+							title: 'Negros',
+							width: '10%',
 						},
 					}
 				});
 		 
 				//Load list from server
 				$('div[name="table-content"]').jtable('load');
-				
-				// click on search
-				$('div[name="btn-search"]').on('click', function(e) {
-					e.preventDefault();
-
-					$('div[name="table-content"]').jtable('load', { 
-						customers_ids : $('select[name="customers-select"]').val(),
-						docs_types_codes : $('select[name="docs-types-select"]').val(),
-					});
-				});
 				
 				// Add Bootstrap style to jTable
 				$.stdjTableBootstrapStyle();
@@ -164,7 +99,7 @@
 							name: '<span><i class="fa fa-edit"></i> Editar</span>',
 							isHtmlName: true,
 							callback: function(itemKey, opt, e) {
-								window.location.href = '/sales/' + opt.$trigger.attr('data-record-key');
+								window.location.href = '/matches/' + opt.$trigger.attr('data-record-key');
 								return false;
 							},
 						},
