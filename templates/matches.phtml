@@ -14,7 +14,7 @@
 					<div class="col-12 p-0">
 						<div class="card card-no-rounded">
 							<div class="card-header d-flex justify-content-between align-items-center">
-								<span><b><i class="fa fa-plus"></i> Cargar Resultado</b></span>
+								<span><b><i class="fa fa-plus"></i> <?= ((isset($matchId) and $matchId > 0) ? "Actualizar" : "Cargar") ?> Resultado</b></span>
 							</div>
 							
 							<?php if (isset($matchId) and $matchId > 0) : ?>
@@ -219,6 +219,7 @@
 								if (data.Result == 'OK')
 								{
 									// match
+									debugger;
 									$('input[name="dated-at"]').val(data.Match.dated_at);
 									$('input[name="white_result"]').val(data.Match.white_result);
 									$('input[name="black_result"]').val(data.Match.black_result);
