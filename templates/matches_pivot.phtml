@@ -34,40 +34,16 @@
 		<script>
 			$(function(){
 				
-				if ( !$('select[name="customers-select"]').hasClass('d-none') )
-					$('select[name="customers-select"]').select2({ width: '100%' });
-				
-				if ( !$('select[name="sales-docs-types-select"]').hasClass('d-none') )
-					$('select[name="sales-docs-types-select"]').select2({ width: '100%' });
-				
-				if ( !$('select[name="collections-docs-types-select"]').hasClass('d-none') )
-					$('select[name="collections-docs-types-select"]').select2({ width: '100%' });
-				
-				// click on report
-				$('div[name="btn-report"]').on('click', function(e) {
-					e.preventDefault();
-					
-					var salesDocsCodes = ['x'];
-					if ( !$('input[name="sales-docs-types-check-nothing"]').prop('checked') ) {
-						salesDocsCodes = $('select[name="sales-docs-types-select"]').val();
-					}
-					
-					var collectionsDocsCodes = ['x'];
-					if ( !$('input[name="collections-docs-types-check-nothing"]').prop('checked') ) {
-						collectionsDocsCodes = $('select[name="collections-docs-types-select"]').val();
-					}
-					
+				refreshPivot();
+
+				function refreshPivot()
+				{
 					// pivot
 					$.ajax({
 						method: 'POST',
-						url: '/sales/pivot',
-						data: { 
-							customers_ids : 			$('select[name="customers-select"]').val(),
-							sales_docs_codes : 			salesDocsCodes,
-							collections_docs_codes : 	collectionsDocsCodes,
-						},
-						success: function(data, textStatus, jqXHR) {
-							
+						url: '/matches/pivot',
+						success: function(data, textStatus, jqXHR)
+						{
 							if (data.Result == 'OK')
 							{
 								$("#pivot").pivotUI(data.Records);
@@ -80,20 +56,7 @@
 							console.warn(jqXHR.responseText);
 						},
 					});
-    				
-				});
-				
-				// checkboxes
-				$('input[name="sales-docs-types-check-nothing"]').on('change', function(e) {
-					var checked = $(this).prop('checked');
-					$('select[name="sales-docs-types-select"]').prop("disabled", checked);
-				});
-				
-				$('input[name="collections-docs-types-check-nothing"]').on('change', function(e) {
-					var checked = $(this).prop('checked');
-					$('select[name="collections-docs-types-select"]').prop("disabled", checked);
-				});
-				
+				}
 			});
 		</script>
 	</body>
