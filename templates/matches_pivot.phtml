@@ -67,8 +67,8 @@
 									var d = new Date(item.Fecha);
 									d.setHours(d.getHours() + 3);
 
-									countWhites += item.Blancos;
-									countBlacks += item.Negros;
+									countWhites += parseInt(item.Blancos);
+									countBlacks += parseInt(item.Negros);
 
 									htmlTable += 
 										'<tr>' +
