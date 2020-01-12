@@ -10,7 +10,8 @@ class User extends Model
 	protected $fillable = [
 		'id',
 		'username',
-		'password'
+		'password',
+		'display_name',
 	];
 	
 	public function companies()
