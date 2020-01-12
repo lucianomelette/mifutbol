@@ -10,7 +10,7 @@ class MatchesController extends Controller
 	{	
 		$args = [
 			"navbar" => [
-				"username_session" 	=> $_SESSION["user_session"]->username,
+				"username_session" 	=> $_SESSION["user_session"]->display_name,
 			],
 		];
 		
