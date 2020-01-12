@@ -52,7 +52,7 @@
 											'<tr>' +
 												'<td>Fecha</td>' +
 												'<td>Blancos</td>' +
-												'<td>Negros</td>' +
+												'<td class="bg-dark text-light">Negros</td>' +
 												'<td>Comentarios</td>' +
 											'</tr>' +
 										'<tbody>';
@@ -72,7 +72,7 @@
 										'<tr>' +
 											`<td>${d.toLocaleDateString()}</td>` +
 											`<td>${item.Blancos}</td>` +
-											`<td>${item.Negros}</td>` +
+											`<td class="bg-dark text-light">${item.Negros}</td>` +
 											`<td>${item.Comentarios}</td>` +
 										'</tr>';
 								});
@@ -81,7 +81,7 @@
 									'<tr>' +
 										'<td><b>Total:</b></td>' +
 										`<td>${countWhites}</td>` +
-										`<td>${countBlacks}</td>` +
+										`<td class="bg-dark text-light">${countBlacks}</td>` +
 										'<td></td>' +
 									'</tr>' +
 									'</tbody>' +
