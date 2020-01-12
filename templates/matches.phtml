@@ -121,7 +121,7 @@
 
 						$.ajax({
 							method: 'POST',
-							url: '/sales/' + (isEdit() ? 'update' : 'create'),
+							url: '/matches/' + (isEdit() ? 'update' : 'create'),
 							dataType: 'json',
 							data: data,
 							success: function(data, textStatus, jqXHR)
