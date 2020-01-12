@@ -13,7 +13,7 @@ $app->group('/login', function() use ($sessionAuth, $companyAuth) {
 	$this->get('', 'LoginController')->setName('login');
 	$this->post('', 'LoginController:login');
 	$this->post('/logout', 'LoginController:logout');
-})->add($hostAuth);
+})->add($hostAuth)->add($sessionAuth);
 
 // matches
 $app->group('/matches', function() {
@@ -27,4 +27,4 @@ $app->group('/matches', function() {
 	// general
 	$this->get('[/{matchId}]', 'MatchesController')->setName('matches');
 	$this->post('/{action}[/{matchId}]', 'MatchesController:action');
-})->add($hostAuth);
+})->add($hostAuth)->add($sessionAuth);
