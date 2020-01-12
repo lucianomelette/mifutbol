@@ -44,7 +44,6 @@
 						url: '/matches/pivot',
 						success: function(data, textStatus, jqXHR)
 						{
-							debugger;
 							if (data.Result == 'OK')
 							{
 								var htmlTable = 
@@ -63,7 +62,6 @@
 
 								data.Records.forEach(function(item)
 								{
-									debugger;
 									var d = new Date(item.Fecha);
 									d.setHours(d.getHours() + 3);
 
@@ -83,7 +81,7 @@
 									'<tr>' +
 										'<td></td>' +
 										`<td>${countWhites}</td>` +
-										`<td>${countNegros}</td>` +
+										`<td>${countBlacks}</td>` +
 										'<td></td>' +
 									'</tr>' +
 									'</tbody>' +
