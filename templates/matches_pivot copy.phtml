@@ -46,46 +46,7 @@
 						{
 							if (data.Result == 'OK')
 							{
-								var htmlTable = 
-									'<table class="table">' +
-										'<thead>' +
-											'<tr>' +
-												'<td>Fecha</td>' +
-												'<td>Blancos</td>' +
-												'<td>Negros</td>' +
-												'<td>Comentarios</td>' +
-											'</tr>' +
-										'<tbody>';
-
-								var countWhites = 0;
-								var countBlacks = 0;
-
-								date.Records.forEach(function(item)
-								{
-									var d = new Date(item.Fecha);
-									d.setHours(d.getHours() + 3);
-
-									countWhites += item.Blancos;
-									countBlacks += item.Negros;
-
-									htmlTable += 
-										'<tr>' +
-											`<td>${d.toLocaleDateString()}</td>` +
-											`<td>${item.Blancos}</td>` +
-											`<td>${item.Negros}</td>` +
-											`<td>${item.Comentarios}</td>` +
-										'</tr>';
-								});
-
-								htmlTable +=
-									'<tr>' +
-										'<td></td>' +
-										`<td>${countWhites}</td>` +
-										`<td>${countNegros}</td>` +
-										'<td></td>' +
-									'</tr>';
-
-								$('#pivot').append(htmlTable);
+								$("#pivot").pivotUI(data.Records);
 							}
 							else {
 								alert('error');
