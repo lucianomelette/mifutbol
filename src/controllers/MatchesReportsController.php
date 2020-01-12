@@ -2,11 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\SaleHeader;
-use App\Models\CollectionHeader;
-use App\Models\Exchange;
-
-use Carbon\Carbon;
+use App\Models\Match;
  
 class MatchesReportsController extends Controller
 {
