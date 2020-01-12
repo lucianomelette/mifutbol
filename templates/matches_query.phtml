@@ -66,8 +66,9 @@
 							title: 'Fecha',
 							width: '10%',
 							display: function(data) {
-								debugger;
-								return new Date(data.record.dated_at).toLocaleDateString('es-AR');
+								usDate = new Date(data.record.dated_at);
+								usDate.setHours(usDate.getHours() + 3); // arDate
+								return usDate.toLocaleDateString();
 							}
 						},
 						white_result: {
